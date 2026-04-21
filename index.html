@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SAIS – Timetable & Cover Engine 2026/27</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f0f4f8;color:#1a1a2e;font-size:13px}
+header{background:linear-gradient(135deg,#1F4E79,#2E75B6);color:white;padding:12px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+header img{height:52px;width:auto;border-radius:4px;background:white;padding:3px}
+header h1{font-size:17px;font-weight:700}
+header p{font-size:11px;opacity:.85}
+.badge{background:rgba(255,255,255,.2);border-radius:20px;padding:3px 10px;font-size:11px;white-space:nowrap}
+.tabs{display:flex;background:#1F4E79;border-bottom:3px solid #2E75B6;overflow-x:auto;flex-wrap:nowrap}
+.tab{padding:10px 16px;cursor:pointer;color:rgba(255,255,255,.7);font-size:12px;font-weight:600;border-bottom:3px solid transparent;margin-bottom:-3px;white-space:nowrap;transition:all .15s}
+.tab:hover{color:white;background:rgba(255,255,255,.1)}
+.tab.active{color:white;border-bottom-color:#FFD700;background:rgba(255,255,255,.15)}
+.panel{display:none;padding:16px}
+.panel.active{display:block}
+/* Controls */
+.controls{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;background:white;padding:14px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:14px}
+.cg{display:flex;flex-direction:column;gap:4px}
+.cg label{font-size:10px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.5px}
+select,input[type=text]{border:1.5px solid #ddd;border-radius:6px;padding:7px 10px;font-size:13px;background:white;cursor:pointer}
+select:focus,input:focus{outline:none;border-color:#2E75B6}
+.btn{padding:7px 14px;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;transition:all .15s}
+.btn-blue{background:#2E75B6;color:white}.btn-blue:hover{background:#1F4E79}
+.btn-red{background:#c0392b;color:white}.btn-red:hover{background:#a93226}
+.btn-green{background:#27ae60;color:white}.btn-green:hover{background:#1e8449}
+.btn-grey{background:#7f8c8d;color:white}.btn-grey:hover{background:#626f70}
+.btn-gold{background:#E8841A;color:white}.btn-gold:hover{background:#c97216}
+/* Cards */
+.card{background:white;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.07);padding:14px;margin-bottom:12px}
+.card-hdr{font-weight:700;font-size:13px;color:#1F4E79;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #E8841A}
+/* Campus pills */
+.pill{display:inline-block;border-radius:12px;padding:2px 9px;font-size:10px;font-weight:700;color:white}
+.pill-pri{background:#27ae60}.pill-sec{background:#2E75B6}.pill-sen{background:#E8841A}
+.pill-cross{background:#8e44ad}
+/* Absent tags */
+.absent-tags{display:flex;flex-wrap:wrap;gap:5px;min-width:200px;min-height:36px;border:1.5px dashed #2E75B6;border-radius:6px;padding:5px 8px;background:#f8fbff;align-items:center}
+.atag{background:#c0392b;color:white;border-radius:12px;padding:3px 10px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:4px}
+.atag .x{cursor:pointer;font-size:14px;line-height:1}
+/* Cover grid */
+.cover-grid{display:flex;flex-direction:column;gap:10px}
+.pblock{background:white;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.07);overflow:hidden}
+.phdr{color:white;padding:9px 14px;font-weight:700;font-size:13px;display:flex;justify-content:space-between;align-items:center}
+.phdr-pri{background:#27ae60}.phdr-sec{background:#2E75B6}.phdr-sen{background:#E8841A}
+.citems{padding:8px;display:flex;flex-direction:column;gap:6px}
+.citem{border-radius:7px;padding:10px 12px;display:grid;grid-template-columns:120px 110px 90px 1fr 100px;gap:8px;align-items:start;font-size:12px;border-left:5px solid #ccc}
+.citem.pri{border-left-color:#27ae60;background:#f0fff4}
+.citem.sec{border-left-color:#2E75B6;background:#f0f8ff}
+.citem.sen{border-left-color:#E8841A;background:#fff8f0}
+/* Staff workload */
+.load-bar{height:8px;border-radius:4px;background:#e0e0e0;overflow:hidden;margin-top:3px}
+.load-fill{height:100%;border-radius:4px;transition:width .3s}
+.load-ok{background:#27ae60}.load-warn{background:#E8841A}.load-over{background:#c0392b}
+/* Stats bar */
+.stats-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.stat{background:white;border-radius:8px;padding:10px 14px;box-shadow:0 2px 6px rgba(0,0,0,.07);flex:1;min-width:100px;text-align:center}
+.stat-n{font-size:22px;font-weight:700;color:#2E75B6}
+.stat-l{font-size:11px;color:#888;margin-top:2px}
+/* Options tables */
+.opt-table{width:100%;border-collapse:collapse;font-size:11px}
+.opt-table th{background:#E8841A;color:white;padding:7px 10px;text-align:left;font-weight:700}
+.opt-table td{border:1px solid #f0d0a0;padding:6px 10px;vertical-align:top}
+.opt-table tr:nth-child(even) td{background:#fff8f0}
+.opt-label{background:#FDE8C8;font-weight:700;color:#7A4000}
+.opt-comp{background:#1F4E79;color:white;font-weight:700;text-align:center}
+/* Tutor grid */
+.tutor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.tutor-card{background:white;border-radius:8px;padding:12px;box-shadow:0 2px 6px rgba(0,0,0,.07);border-top:3px solid #2E75B6}
+.tutor-card.pri{border-top-color:#27ae60}
+.tutor-card.sen{border-top-color:#E8841A}
+.tutor-yg{font-weight:700;font-size:13px;color:#1F4E79;margin-bottom:6px}
+/* Warning banner */
+.warn-banner{background:#fff3cd;border:1px solid #ffc107;border-radius:7px;padding:8px 12px;font-size:12px;margin-bottom:12px;display:flex;gap:8px;align-items:flex-start}
+.gap-banner{background:#fde8e8;border:1px solid #c0392b;border-radius:7px;padding:8px 12px;font-size:12px;margin-bottom:8px}
+/* Copilot */
+.copilot-wrap{display:flex;flex-direction:column;height:calc(100vh - 180px);min-height:400px}
+.chat-history{flex:1;overflow-y:auto;padding:10px;background:white;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.07);margin-bottom:10px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:80%;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.5}
+.msg-user{background:#2E75B6;color:white;align-self:flex-end;border-bottom-right-radius:3px}
+.msg-ai{background:#f0f4f8;color:#1a1a2e;align-self:flex-start;border-bottom-left-radius:3px}
+.msg-ai strong{color:#1F4E79}
+.chat-input-row{display:flex;gap:8px}
+.chat-input-row input{flex:1;border:1.5px solid #2E75B6;border-radius:8px;padding:10px 14px;font-size:13px}
+.thinking{color:#888;font-style:italic;font-size:12px}
+/* Legend */
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;font-size:11px;align-items:center;background:white;padding:10px 14px;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.ld{width:11px;height:11px;border-radius:2px;display:inline-block;margin-right:3px;vertical-align:middle}
+/* Grid */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+@media(max-width:800px){.grid-2,.grid-3{grid-template-columns:1fr}.citem{grid-template-columns:1fr 1fr}}
+/* Admin note */
+.admin-note{background:#fff8e1;border:1px solid #fdd835;border-radius:7px;padding:8px 12px;font-size:12px;margin-bottom:12px}
+/* Table general */
+.data-table{width:100%;border-collapse:collapse;font-size:12px}
+.data-table th{background:#1F4E79;color:white;padding:8px 10px;text-align:left;font-size:11px}
+.data-table td{border-bottom:1px solid #e8e8e8;padding:6px 10px;vertical-align:top}
+.data-table tr:hover td{background:#f5f9ff}
+.no-r{text-align:center;padding:30px;color:#aaa;font-size:14px}
+</style>
+</head>
+<body>
+
+<header>
+  <img src="data:image/jpeg;base64,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" alt="SAIS Logo">
+  <div>
+    <h1>SAIS Timetable &amp; Cover Engine</h1>
+    <p>Academic Year 2026/27 &nbsp;·&nbsp; Santo António International School of Estoril</p>
+  </div>
+  <span class="badge">3 Campuses</span>
+  <span class="badge">Primary · Secondary · Senior</span>
+  <span class="badge">50+ Staff</span>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('cover')">🔄 Cover Planner</div>
+  <div class="tab" onclick="showTab('timetables')">📅 Timetables</div>
+  <div class="tab" onclick="showTab('workload')">📊 Staff &amp; Workload</div>
+  <div class="tab" onclick="showTab('options')">📚 Options Blocks</div>
+  <div class="tab" onclick="showTab('tutors')">🎓 Tutor Assignments</div>
+  <div class="tab" onclick="showTab('copilot')">🤖 AI Copilot</div>
+</div>
+
+
+<!-- ══ COVER PLANNER ══ -->
+<div class="panel active" id="panel-cover">
+  <div class="admin-note">⚠️ <strong>Admin staff (MZ, MS, ATS, ALF, MM, MG)</strong> — break/lunch/duty only, excluded from lesson cover. &nbsp;|&nbsp; <strong>LS</strong> — grounds/admin, not timetabled. &nbsp;|&nbsp; <strong>LM</strong> — returning November 2026: add to absent list daily until confirmed back. &nbsp;|&nbsp; Cross-campus staff (JS, MB, DV, DPB, IR, MF) can only cover on their assigned campus day.</div>
+  <div class="controls">
+    <div class="cg"><label>Campus</label>
+      <select id="sel-campus" onchange="refreshCover()">
+        <option value="all">All Campuses</option>
+        <option value="Primary">Primary</option>
+        <option value="Secondary">Secondary</option>
+        <option value="Senior">Senior</option>
+      </select>
+    </div>
+    <div class="cg"><label>Day</label>
+      <select id="sel-day" onchange="refreshCover()">
+        <option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option>
+      </select>
+    </div>
+    <div class="cg"><label>Add Absent Teacher</label>
+      <div style="display:flex;gap:6px">
+        <select id="sel-absent"><option value="">— select —</option></select>
+        <button class="btn btn-red" onclick="addAbsent()">+ Add</button>
+      </div>
+    </div>
+    <div class="cg" style="flex:1"><label>Absent Today</label>
+      <div class="absent-tags" id="absent-tags"><span style="color:#bbb;font-size:11px">None entered</span></div>
+    </div>
+    <div class="cg"><label>&nbsp;</label>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-grey" onclick="clearAbsent()">Clear All</button>
+        <button class="btn btn-green" id="print-btn" onclick="window.print()" style="display:none">🖨️ Print</button>
+      </div>
+    </div>
+  </div>
+  <div class="stats-bar" id="cover-stats" style="display:none"></div>
+  <div class="legend">
+    <strong>Campus:</strong>
+    <span><span class="ld" style="background:#27ae60"></span>Primary</span>
+    <span><span class="ld" style="background:#2E75B6"></span>Secondary</span>
+    <span><span class="ld" style="background:#E8841A"></span>Senior</span>
+    <span style="margin-left:8px"><strong>Cover:</strong></span>
+    <span>🎯 Subject match</span><span>📚 Phase match</span><span>👤 Other free</span>
+    <span style="margin-left:8px">⚠️ Max load warning</span>
+  </div>
+  <div class="cover-grid" id="cover-grid"><div class="no-r">👆 Select a day and add absent teachers to generate cover suggestions</div></div>
+</div>
+
+<!-- ══ TIMETABLES ══ -->
+<div class="panel" id="panel-timetables">
+  <div class="controls">
+    <div class="cg"><label>View By</label>
+      <select id="tt-view" onchange="showTimetable()">
+        <option value="teacher">Teacher</option>
+        <option value="campus">Campus Overview</option>
+        <option value="yeargroup">Year Group</option>
+      </select>
+    </div>
+    <div class="cg"><label>Select</label>
+      <select id="tt-select" onchange="showTimetable()"><option value="">— choose —</option></select>
+    </div>
+    <div class="cg"><label>Day</label>
+      <select id="tt-day" onchange="showTimetable()">
+        <option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option>
+      </select>
+    </div>
+  </div>
+  <div id="tt-container"><div class="no-r">📅 The 2026/27 timetable will be built here once period allocations are confirmed.<br><br>Select a teacher above to see their current allocation, or use the AI Copilot to begin building timetable blocks.</div></div>
+</div>
+
+<!-- ══ STAFF & WORKLOAD ══ -->
+<div class="panel" id="panel-workload">
+  <div class="controls">
+    <div class="cg"><label>Filter Campus</label>
+      <select id="wl-campus" onchange="renderWorkload()">
+        <option value="all">All</option>
+        <option value="Primary">Primary</option>
+        <option value="Secondary">Secondary</option>
+        <option value="Senior">Senior</option>
+        <option value="Cross">Cross-Campus</option>
+      </select>
+    </div>
+    <div class="cg"><label>Show</label>
+      <select id="wl-filter" onchange="renderWorkload()">
+        <option value="all">All Staff</option>
+        <option value="over">Over Limit</option>
+        <option value="under">Under-utilised</option>
+        <option value="gaps">Unfilled Gaps</option>
+      </select>
+    </div>
+  </div>
+  <div id="workload-grid"></div>
+</div>
+
+<!-- ══ OPTIONS BLOCKS ══ -->
+<div class="panel" id="panel-options">
+  <div class="grid-2" style="margin-bottom:16px">
+    <div class="card">
+      <div class="card-hdr">iGCSE Options — A5 &amp; A6</div>
+      <table class="opt-table" style="width:100%">
+        <tr><th>Option</th><th>Subject 1</th><th>Subject 2</th><th>Subject 3</th><th>Subject 4</th></tr>
+        <tr><td class="opt-label">Option 1<br><small>Languages</small></td><td>French <small>(G1)</small></td><td>Spanish <small>(G1)</small></td><td>English Literature <small>(G2)</small></td><td>Mandarin <small>(G1)</small></td></tr>
+        <tr><td class="opt-label">Option 2<br><small>Humanities</small></td><td>History <small>(G2)</small></td><td>Geography <small>(G2)</small></td><td></td><td></td></tr>
+        <tr><td class="opt-label">Option 3<br><small>Business/GP</small></td><td>Business Studies <small>(G5)</small></td><td>Global Perspectives <small>(G5)</small></td><td></td><td></td></tr>
+        <tr><td class="opt-label">Option 4<br><small>Tech</small></td><td>Design &amp; Technology <small>(G5)</small></td><td>Computer Science <small>(G5)</small></td><td></td><td></td></tr>
+        <tr><td class="opt-label">Option 5<br><small>Creative</small></td><td>Art &amp; Design <small>(G3)</small></td><td>Physical Education <small>(G5)</small></td><td>Music <small>(G5)*</small></td><td></td></tr>
+        <tr><td colspan="5" style="background:#FFF8E1;font-size:11px;padding:5px 10px">★ <strong>Additional Mathematics</strong> — runs simultaneously with Extended Maths. Extended Maths students only.</td></tr>
+        <tr><td colspan="5" class="opt-comp">COMPULSORY: English · Portuguese · Mathematics (Extended &amp; Additional) · Co-ordinated Sciences · PE (non-exam) · RE (A5 only)</td></tr>
+      </table>
+      <p style="font-size:10px;color:#888;margin-top:5px">* Music subject to MID days confirmation. Teachers: Option 1 – AB/XP/ML/ES; Option 2 – NW/AOC; Option 3 – SVA/CV; Option 4 – NJW/VF; Option 5 – QV/DV/MID</p>
+    </div>
+    <div class="card">
+      <div class="card-hdr">A Level / AICE Diploma Options — A7 &amp; A8</div>
+      <table class="opt-table" style="width:100%">
+        <tr><th>Option</th><th>Subject 1</th><th>Subject 2</th><th>Subject 3</th><th>Subject 4</th><th>Subject 5</th></tr>
+        <tr><td class="opt-label">Option 1</td><td>History <small>(G3)</small></td><td>Mathematics <small>(G1)</small></td><td>Media Studies <small>(G3)</small></td><td>Psychology <small>(G3)</small></td><td></td></tr>
+        <tr><td class="opt-label">Option 2</td><td>Biology <small>(G1)</small></td><td>Business <small>(G3)</small></td><td>D&amp;T <small>(G1)</small></td><td>Physics <small>(G1)</small></td><td></td></tr>
+        <tr><td class="opt-label">Option 3</td><td>Chemistry <small>(G1)</small></td><td>Computer Science <small>(G1)</small></td><td>IT <small>(G1)</small></td><td>Portuguese II AS <small>(G2)</small></td><td></td></tr>
+        <tr><td class="opt-label">Option 4<br><small>Languages</small></td><td>English AS <small>(G2)</small></td><td>French <small>(G2)</small></td><td>Mandarin <small>(G2)</small></td><td>Portuguese <small>(G2)</small></td><td>Spanish <small>(G2)</small></td></tr>
+        <tr><td class="opt-label">Option 5</td><td>Art &amp; Design <small>(G3)</small></td><td>Marine Science <small>(G1)</small></td><td>PE <small>AS (G1/3)</small></td><td>Travel &amp; Tourism <small>AS (G3)</small></td><td></td></tr>
+        <tr><td colspan="6" class="opt-comp">COMPULSORY: Environmental Management (WL &amp; PM, α/β split) · Global Perspectives AS (SVA, both groups)</td></tr>
+      </table>
+      <p style="font-size:10px;color:#888;margin-top:5px">Students select 4 subjects (1 from each group + 1 extra), skipping one block. AS = 1 credit, A Level = 2 credits. 7 credits needed for AICE Diploma.</p>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hdr">Options Evening — Tuesday 28 April 2026</div>
+    <p style="font-size:12px;color:#555">Student choices will be entered here after the options evening. The timetabling engine will then use demand data to confirm which option groups are viable and flag any clashes.</p>
+    <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap" id="options-demand">
+      <div class="no-r" style="width:100%;padding:15px">📋 Awaiting options evening results (Tue 28 Apr 2026). Once entered, subject demand analysis will appear here.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TUTOR ASSIGNMENTS ══ -->
+<div class="panel" id="panel-tutors">
+  <div class="admin-note">👤 Assign a form tutor to each year group. Tutors are responsible for registration, pastoral oversight and the form period. Assignments are saved in this session — use the Copilot to make changes by voice.</div>
+  <div class="tutor-grid" id="tutor-grid"></div>
+  <div style="margin-top:12px;text-align:right">
+    <button class="btn btn-green" onclick="saveTutors()">💾 Save Assignments</button>
+    <button class="btn btn-grey" onclick="resetTutors()" style="margin-left:8px">Reset All</button>
+  </div>
+</div>
+
+<!-- ══ AI COPILOT ══ -->
+<div class="panel" id="panel-copilot">
+  <div class="admin-note">🤖 <strong>SAIS AI Copilot</strong> — This assistant knows the full school structure, staff list, options blocks, campus rules and workload limits for 2026/27. Ask it to make changes, check clashes, model scenarios or explain any aspect of the timetable.</div>
+  <div class="copilot-wrap">
+    <div class="chat-history" id="chat-history">
+      <div class="msg msg-ai"><strong>SAIS Copilot ready.</strong><br><br>I have full knowledge of the 2026/27 structure including all staff, three campuses, iGCSE and A Level options, workload limits and scheduling rules.<br><br>You can ask me things like:<br>• "What is NW's maximum teaching load?"<br>• "Who can cover A5 Geography on a Wednesday?"<br>• "Show me the staffing gap risks"<br>• "Assign RL as tutor for A2"<br>• "What happens if MID doesn't expand their days?"</div>
+    </div>
+    <div class="chat-input-row">
+      <input type="text" id="chat-input" placeholder="Ask the copilot anything about the 2026/27 timetable..." onkeydown="if(event.key==='Enter')sendMessage()">
+      <button class="btn btn-blue" onclick="sendMessage()">Send ↗</button>
+      <button class="btn btn-grey" onclick="clearChat()">Clear</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════
+// CORE DATA — SAIS 2026/27
+// ══════════════════════════════════════════════════
+
+const YEAR_GROUPS = [
+  {code:'Nursery', label:'Nursery (2–3)', campus:'Primary', stage:'EY'},
+  {code:'Reception', label:'Reception (3–4)', campus:'Primary', stage:'EY'},
+  {code:'P1', label:'P1 / Year 1 (5–6)', campus:'Primary', stage:'Lower'},
+  {code:'P2', label:'P2 / Year 2 (6–7)', campus:'Primary', stage:'Lower'},
+  {code:'P3', label:'P3 / Year 3 (7–8)', campus:'Primary', stage:'Lower'},
+  {code:'P4', label:'P4 / Year 4 (8–9)', campus:'Primary', stage:'Lower'},
+  {code:'P5', label:'P5 / Year 5 (9–10)', campus:'Primary', stage:'Upper'},
+  {code:'A1', label:'A1 / Year 6 (10–11)', campus:'Primary', stage:'Upper'},
+  {code:'A2', label:'A2 / Year 7', campus:'Secondary', stage:'KS3'},
+  {code:'A3', label:'A3 / Year 8', campus:'Secondary', stage:'KS3'},
+  {code:'A4', label:'A4 / Year 9', campus:'Secondary', stage:'KS3'},
+  {code:'A5', label:'A5 / Year 10 (iGCSE)', campus:'Secondary', stage:'iGCSE'},
+  {code:'A6', label:'A6 / Year 11 (iGCSE)', campus:'Secondary', stage:'iGCSE'},
+  {code:'A7', label:'A7 / Year 12 (A Level)', campus:'Senior', stage:'ALevel'},
+  {code:'A8', label:'A8 / Year 13 (A Level)', campus:'Senior', stage:'ALevel'},
+];
+
+const PERIODS = {
+  Primary: [
+    {p:'P1', t:'08:30–09:15', type:'lesson'},
+    {p:'P2', t:'09:15–10:00', type:'lesson'},
+    {p:'BRK', t:'10:15–10:35', type:'break'},
+    {p:'P3', t:'10:35–11:20', type:'lesson'},
+    {p:'LCH', t:'11:20–12:05', type:'lunch', note:'KG–P4'},
+    {p:'P5', t:'12:05–12:50', type:'lesson'},
+    {p:'P6', t:'12:50–13:25', type:'lesson'},
+    {p:'P7', t:'13:25–14:20', type:'lesson'},
+    {p:'P8', t:'14:20–15:05', type:'lesson'},
+    {p:'EXT', t:'15:05–15:50', type:'ext', note:'Tue/Thu opt.'},
+  ],
+  Secondary: [
+    {p:'FRM', t:'08:15–08:30', type:'form'},
+    {p:'P1', t:'08:30–09:15', type:'lesson'},
+    {p:'P2', t:'09:15–10:00', type:'lesson'},
+    {p:'BRK', t:'10:00–10:35', type:'break'},
+    {p:'P3', t:'10:35–11:20', type:'lesson'},
+    {p:'P4', t:'11:20–12:05', type:'lesson'},
+    {p:'LCH_KS3', t:'12:05–12:50', type:'lunch', note:'A2–A4'},
+    {p:'P5', t:'12:05–12:50', type:'lesson', note:'iGCSE only during A2-A4 lunch'},
+    {p:'LCH_IGCSE', t:'12:50–13:35', type:'lunch', note:'A5–A6'},
+    {p:'P5b', t:'12:50–13:35', type:'lesson', note:'A2-A4 only'},
+    {p:'P6', t:'13:35–14:20', type:'lesson'},
+    {p:'P7', t:'14:20–15:05', type:'lesson'},
+    {p:'P8', t:'15:05–15:50', type:'lesson'},
+  ],
+  Senior: [
+    {p:'FRM', t:'08:15–08:30', type:'form'},
+    {p:'L1', t:'08:30–09:30', type:'lesson'},
+    {p:'L2', t:'09:30–10:30', type:'lesson'},
+    {p:'BRK', t:'10:30–10:50', type:'break'},
+    {p:'L3', t:'10:50–11:50', type:'lesson'},
+    {p:'L4', t:'11:50–12:50', type:'lesson'},
+    {p:'LCH', t:'12:50–13:50', type:'lunch', note:'Walk to Secondary + lunch + walk back'},
+    {p:'L5', t:'13:50–14:50', type:'lesson'},
+    {p:'L6', t:'14:50–15:50', type:'lesson'},
+  ],
+};
+
+const WORKLOAD_LIMITS = {
+  Primary_Lower: {total:35, max:25, label:'Lower Primary'},
+  Primary_Upper: {total:40, max:28, label:'Upper Primary'},
+  Secondary:     {total:40, max:28, label:'Secondary'},
+  Senior:        {total:30, max:21, label:'Senior'},
+};
+
+const STAFF = {
+  // PRIMARY
+  LB:  {name:'LB (Mrs Bishop)',   campus:'Primary',   cross:false, role:'Teaching', dept:'Primary', coordinator:true,
+        subjects:['English','Primary','Phonics'], yearGroups:['P1','P2','P3','P4','P5','A1'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full', stage:'Upper'},
+  FR:  {name:'FR (Mrs Rattansi)', campus:'Primary',   cross:false, role:'Teaching', dept:'Primary',
+        subjects:['English','Phonics','Primary'], yearGroups:['P1','P2','P3','P4','P5','A1'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full', stage:'Upper'},
+  VV:  {name:'VV',                campus:'Primary',   cross:false, role:'Teaching', dept:'Primary',
+        subjects:['Science','Geography','History','Global Perspectives','ICT'],
+        yearGroups:['P1','P2','P3','P4','P5','A1'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full', stage:'Upper'},
+  JR:  {name:'JR (Mrs Ramos)',    campus:'Primary',   cross:false, role:'Teaching', dept:'Primary',
+        subjects:['Portuguese','Maths'], yearGroups:['P1','P2','P3','P4','P5','A1'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full', stage:'Lower'},
+  LM:  {name:'LM (Mrs Moolman)', campus:'Primary',   cross:false, role:'Teaching', dept:'English',
+        subjects:['English','Geography','Science','History'], yearGroups:['P1','P2','P3','P4','P5','A1'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full', absent_until:'Nov 2026', stage:'Upper'},
+  BS:  {name:'BS (Mr Simon)',     campus:'Primary',   cross:false, role:'Teaching', dept:'PE',
+        subjects:['PE'], yearGroups:['P1','P2','P3','P4','P5','A1'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full', stage:'Lower'},
+  CS:  {name:'CS (Ms Fernandes)',campus:'Primary',   cross:false, role:'Teaching', dept:'Music and PA',
+        subjects:['Music','Performing Arts'], yearGroups:['P1','P2','P3','P4','P5','A1'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full', stage:'Upper'},
+  MF:  {name:'MF',                campus:'Primary',   cross:false, role:'Teaching', dept:'Music and PA',
+        subjects:['Music','Performing Arts'], yearGroups:['P1','P2','P3','P4','P5','A1'],
+        days:{Mon:true,Tue:true,Wed:false,Thu:true,Fri:false}, fte:'Part', stage:'Lower'},
+  AS:  {name:'AS',                campus:'Primary',   cross:false, role:'Teaching', dept:'Early Years',
+        subjects:['Early Years'], yearGroups:['Nursery','Reception'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'TBC', stage:'EY'},
+  AMA: {name:'AMA (Mrs Alice)',   campus:'Primary',   cross:false, role:'Teaching', dept:'Early Years',
+        subjects:['Early Years','Primary'], yearGroups:['Nursery','Reception','P1'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full', stage:'EY'},
+  MT:  {name:'MT',                campus:'Primary',   cross:false, role:'Teaching', dept:'TBC',
+        subjects:['TBC'], yearGroups:[], days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'TBC', stage:'TBC'},
+  JA:  {name:'JA',                campus:'Primary',   cross:false, role:'Teaching', dept:'TBC',
+        subjects:['TBC'], yearGroups:[], days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'TBC', stage:'TBC'},
+  // SECONDARY
+  CF:  {name:'CF',  campus:'Secondary', cross:false, role:'Teaching', dept:'Science',
+        subjects:['Science','Maths'], yearGroups:['A2','A3','A4'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full'},
+  NS:  {name:'NS',  campus:'Secondary', cross:false, role:'Teaching', dept:'English',
+        subjects:['English','RE'], yearGroups:['A2','A3','A4','A5'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full'},
+  NW:  {name:'NW',  campus:'Secondary', cross:false, role:'Teaching', dept:'Humanities',
+        subjects:['History','Geography','Global Perspectives'], yearGroups:['A2','A3','A4','A5','A6','A7','A8'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full'},
+  MO:  {name:'MO',  campus:'Secondary', cross:false, role:'Teaching', dept:'Maths',
+        subjects:['Maths','Additional Maths'], yearGroups:['A3','A4','A5','A6'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full'},
+  NJW: {name:'NJW', campus:'Secondary', cross:false, role:'Teaching', dept:'DT',
+        subjects:['DT','PE'], yearGroups:['A2','A3','A4','A5','A6','A7'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full'},
+  FPV: {name:'FPV', campus:'Secondary', cross:false, role:'Teaching', dept:'PE',
+        subjects:['PE','DT'], yearGroups:['A2','A3','A4','A5','A6','A7'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full'},
+  FA:  {name:'FA',  campus:'Secondary', cross:false, role:'Teaching', dept:'PE',
+        subjects:['PE'], yearGroups:['A3','A4','A5','A6','A7','A8'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full'},
+  IR:  {name:'IR',  campus:'Primary',   cross:true,  role:'Teaching', dept:'Art',
+        subjects:['Art'], yearGroups:['P1','P2','P3','P4','P5','A1','A2','A3','A4'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full',
+        crossNote:'Whole-day campus split — Primary days vs Secondary days TBC'},
+  VF:  {name:'VF',  campus:'Secondary', cross:false, role:'Teaching', dept:'ICT',
+        subjects:['Computer Science','ICT'], yearGroups:['A2','A3','A4','A5','A6'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:false,Fri:true}, fte:'Part'},
+  TBA: {name:'TBA', campus:'Secondary', cross:false, role:'Teaching', dept:'Science',
+        subjects:['Science'], yearGroups:['A5','A6'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full'},
+  CV:  {name:'CV',  campus:'Secondary', cross:false, role:'Teaching', dept:'Humanities',
+        subjects:['Business Studies'], yearGroups:['A5','A6','A7','A8'],
+        days:{Mon:false,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Part'},
+  SA:  {name:'SA (Mrs Aguiar)',campus:'Secondary',cross:false, role:'Teaching', dept:'Languages',
+        subjects:['Portuguese'], yearGroups:['A2','A3','A4'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full'},
+  RL:  {name:'RL (Mrs Leandro)',campus:'Secondary',cross:false, role:'Teaching', dept:'Languages',
+        subjects:['Portuguese'], yearGroups:['A2','A3','A4'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full'},
+  MNS: {name:'MNS', campus:'Secondary', cross:false, role:'Teaching', dept:'Languages',
+        subjects:['Portuguese'], yearGroups:['A4'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:false}, fte:'Part'},
+  CC:  {name:'CC',  campus:'Secondary', cross:false, role:'Teaching', dept:'Languages',
+        subjects:['Portuguese'], yearGroups:['A5'],
+        days:{Mon:true,Tue:false,Wed:true,Thu:false,Fri:true}, fte:'Part'},
+  XP:  {name:'XP',  campus:'Secondary', cross:false, role:'Teaching', dept:'Languages',
+        subjects:['Spanish'], yearGroups:['A3','A4','A5','A6'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full'},
+  AB:  {name:'AB',  campus:'Secondary', cross:false, role:'Teaching', dept:'Languages',
+        subjects:['French'], yearGroups:['A5','A6','A7','A8'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full'},
+  ML:  {name:'ML',  campus:'Secondary', cross:false, role:'Teaching', dept:'Languages',
+        subjects:['Mandarin'], yearGroups:['A5','A6','A7','A8'],
+        days:{Mon:true,Tue:false,Wed:true,Thu:false,Fri:true}, fte:'Part'},
+  QV:  {name:'QV',  campus:'Secondary', cross:false, role:'Teaching', dept:'Art',
+        subjects:['Art','Global Perspectives'], yearGroups:['A2','A3','A4','A5','A6'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full'},
+  MID: {name:'MID', campus:'Secondary', cross:false, role:'Teaching', dept:'Music and PA',
+        subjects:['Music','Performing Arts'], yearGroups:['A2','A3','A4'],
+        days:{Mon:false,Tue:true,Wed:false,Thu:false,Fri:true}, fte:'Part',
+        note:'Days expanding TBC'},
+  // SENIOR
+  SVA: {name:'SVA', campus:'Senior', cross:false, role:'Teaching', dept:'Humanities',
+        subjects:['Global Perspectives','Psychology'], yearGroups:['A5','A6','A7','A8'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full'},
+  PM:  {name:'PM',  campus:'Senior', cross:false, role:'Teaching', dept:'Science',
+        subjects:['Biology','Environmental Management','Marine Science'], yearGroups:['A7','A8'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full'},
+  WL:  {name:'WL',  campus:'Senior', cross:false, role:'Teaching', dept:'Humanities',
+        subjects:['Environmental Management','History','Travel and Tourism'], yearGroups:['A7','A8'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full'},
+  PK:  {name:'PK',  campus:'Senior', cross:false, role:'Teaching', dept:'Maths',
+        subjects:['Maths','Further Maths'], yearGroups:['A7','A8'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full'},
+  ES:  {name:'ES',  campus:'Senior', cross:false, role:'Teaching', dept:'English',
+        subjects:['English','English Literature','Global Perspectives'], yearGroups:['A7','A8'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full'},
+  MD:  {name:'MD',  campus:'Senior', cross:false, role:'Teaching', dept:'Science',
+        subjects:['Chemistry'], yearGroups:['A7','A8'],
+        days:{Mon:true,Tue:true,Wed:false,Thu:true,Fri:false}, fte:'Part'},
+  CP:  {name:'CP',  campus:'Senior', cross:false, role:'Teaching', dept:'Science',
+        subjects:['Physics','Maths'], yearGroups:['A7','A8'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full'},
+  TS:  {name:'TS',  campus:'Senior', cross:false, role:'Teaching', dept:'Languages',
+        subjects:['Spanish'], yearGroups:['A7','A8'],
+        days:{Mon:true,Tue:true,Wed:false,Thu:true,Fri:false}, fte:'Part'},
+  EH:  {name:'EH',  campus:'Senior', cross:false, role:'Teaching', dept:'Media',
+        subjects:['Media Studies'], yearGroups:['A7','A8'],
+        days:{Mon:false,Tue:false,Wed:true,Thu:false,Fri:true}, fte:'Part'},
+  MK:  {name:'MK',  campus:'Senior', cross:false, role:'Teaching', dept:'Humanities',
+        subjects:['Business Studies'], yearGroups:['A7','A8'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full'},
+  // CROSS-CAMPUS
+  DPB: {name:'DPB', campus:'Cross', cross:true, role:'Teaching', dept:'Languages',
+        subjects:['Portuguese','Portuguese II'], yearGroups:['A5','A6','A7','A8'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:false}, fte:'Part',
+        crossNote:'Secondary days = iGCSE · Senior days = A Level · No same-day split'},
+  JS:  {name:'JS',  campus:'Cross', cross:true, role:'Teaching', dept:'ICT',
+        subjects:['ICT','Computer Science','Media Studies'], yearGroups:['A5','A6','A7','A8'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full',
+        crossNote:'Whole-day campus split required'},
+  MB:  {name:'MB',  campus:'Cross', cross:true, role:'Teaching', dept:'DT',
+        subjects:['DT','Art'], yearGroups:['A5','A6','A7','A8'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full',
+        crossNote:'Whole-day campus split required'},
+  DV:  {name:'DV',  campus:'Cross', cross:true, role:'Teaching', dept:'PE',
+        subjects:['PE','PE Option'], yearGroups:['A5','A6','A7','A8'],
+        days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full',
+        crossNote:'Whole-day campus split required'},
+  // ADMIN
+  MZ:  {name:'MZ', campus:'Secondary', cross:false, role:'Admin', dept:'Admin',
+        subjects:[], yearGroups:[], days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full'},
+  MS:  {name:'MS', campus:'Secondary', cross:false, role:'Admin', dept:'Admin',
+        subjects:[], yearGroups:[], days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full'},
+  ATS: {name:'ATS',campus:'Secondary', cross:false, role:'Admin', dept:'Admin',
+        subjects:[], yearGroups:[], days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full'},
+  ALF: {name:'ALF',campus:'Secondary', cross:false, role:'Admin', dept:'Admin',
+        subjects:[], yearGroups:[], days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full'},
+  MM:  {name:'MM', campus:'Secondary', cross:false, role:'Admin', dept:'Admin',
+        subjects:[], yearGroups:[], days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full'},
+  MG:  {name:'MG', campus:'Secondary', cross:false, role:'Admin', dept:'Admin',
+        subjects:[], yearGroups:[], days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full'},
+  LS:  {name:'LS', campus:'Primary',   cross:false, role:'Admin/Grounds', dept:'Grounds',
+        subjects:[], yearGroups:[], days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true}, fte:'Full'},
+};
+
+const CAMPUS_COLORS = {Primary:'#27ae60', Secondary:'#2E75B6', Senior:'#E8841A', Cross:'#8e44ad'};
+const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+const DAY_SHORT = {Monday:'Mon',Tuesday:'Tue',Wednesday:'Wed',Thursday:'Thu',Friday:'Fri'};
+
+// Timetable data — to be populated as blocks are assigned
+// Format: {teacher: {day: {period: {subject, yearGroup, room}}}}
+let TIMETABLE = {};
+
+// Tutor assignments
+let TUTORS = {};
+YEAR_GROUPS.forEach(yg => { TUTORS[yg.code] = ''; });
+
+// Absent teachers for cover
+let ABSENT = [];
+
+// ══════════════════════════════════════════════════
+// TAB NAVIGATION
+// ══════════════════════════════════════════════════
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`#panel-${name}`).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (name === 'cover') populateAbsentSelect();
+  if (name === 'workload') renderWorkload();
+  if (name === 'tutors') renderTutors();
+  if (name === 'timetables') initTimetableView();
+}
+
+// ══════════════════════════════════════════════════
+// COVER PLANNER
+// ══════════════════════════════════════════════════
+function populateAbsentSelect() {
+  const sel = document.getElementById('sel-absent');
+  const campus = document.getElementById('sel-campus').value;
+  const day = document.getElementById('sel-day').value;
+  const ds = DAY_SHORT[day];
+  sel.innerHTML = '<option value="">— select teacher —</option>';
+  Object.entries(STAFF).forEach(([code, s]) => {
+    if (s.role !== 'Teaching') return;
+    if (!s.days[ds]) return;
+    if (campus !== 'all' && s.campus !== campus && !(campus === 'Secondary' && s.campus === 'Cross') && !(campus === 'Senior' && s.campus === 'Cross')) return;
+    if (ABSENT.includes(code)) return;
+    const opt = document.createElement('option');
+    opt.value = code;
+    opt.textContent = `${code} — ${s.dept} (${s.campus})`;
+    sel.appendChild(opt);
+  });
+}
+
+function addAbsent() {
+  const sel = document.getElementById('sel-absent');
+  if (!sel.value) return;
+  const code = sel.value;
+  if (!ABSENT.includes(code)) {
+    ABSENT.push(code);
+    renderAbsentTags();
+    refreshCover();
+    populateAbsentSelect();
+  }
+}
+
+function removeAbsent(code) {
+  ABSENT = ABSENT.filter(c => c !== code);
+  renderAbsentTags();
+  refreshCover();
+  populateAbsentSelect();
+}
+
+function clearAbsent() {
+  ABSENT = [];
+  renderAbsentTags();
+  refreshCover();
+  populateAbsentSelect();
+}
+
+function renderAbsentTags() {
+  const div = document.getElementById('absent-tags');
+  if (!ABSENT.length) {
+    div.innerHTML = '<span style="color:#bbb;font-size:11px">None entered</span>';
+    document.getElementById('print-btn').style.display = 'none';
+    return;
+  }
+  div.innerHTML = ABSENT.map(c => {
+    const s = STAFF[c];
+    const campus = s ? s.campus : '';
+    const campusColor = CAMPUS_COLORS[campus] || '#999';
+    return `<span class="atag" style="background:${campusColor}">${c} <span class="x" onclick="removeAbsent('${c}')">×</span></span>`;
+  }).join('');
+  document.getElementById('print-btn').style.display = 'block';
+}
+
+function refreshCover() {
+  populateAbsentSelect();
+  const grid = document.getElementById('cover-grid');
+  const statsBar = document.getElementById('cover-stats');
+  if (!ABSENT.length) {
+    grid.innerHTML = '<div class="no-r">👆 Add absent teachers to generate cover suggestions</div>';
+    statsBar.style.display = 'none';
+    return;
+  }
+  const day = document.getElementById('sel-day').value;
+  const ds = DAY_SHORT[day];
+  const filterCampus = document.getElementById('sel-campus').value;
+
+  // Group absent by campus
+  const absentByCampus = {};
+  ABSENT.forEach(code => {
+    const s = STAFF[code];
+    if (!s) return;
+    const c = s.campus;
+    if (!absentByCampus[c]) absentByCampus[c] = [];
+    absentByCampus[c].push(code);
+  });
+
+  // Stats
+  statsBar.style.display = 'flex';
+  statsBar.innerHTML = `
+    <div class="stat"><div class="stat-n">${ABSENT.length}</div><div class="stat-l">Absent Today</div></div>
+    <div class="stat"><div class="stat-n">${Object.keys(absentByCampus).join(', ') || '—'}</div><div class="stat-l">Campuses Affected</div></div>
+    <div class="stat"><div class="stat-n">${day}</div><div class="stat-l">Day</div></div>
+  `;
+
+  let html = '';
+
+  // For each absent teacher, find their timetabled lessons and suggest cover
+  ABSENT.forEach(abCode => {
+    const abStaff = STAFF[abCode];
+    if (!abStaff) return;
+    if (filterCampus !== 'all' && abStaff.campus !== filterCampus && abStaff.campus !== 'Cross') return;
+
+    // Check if staff member works today
+    if (!abStaff.days[ds]) return;
+
+    const campus = abStaff.campus === 'Cross' ? 'Secondary/Senior' : abStaff.campus;
+    const campusClass = abStaff.campus === 'Primary' ? 'pri' : abStaff.campus === 'Senior' ? 'sen' : 'sec';
+    const campusHdrClass = abStaff.campus === 'Primary' ? 'phdr-pri' : abStaff.campus === 'Senior' ? 'phdr-sen' : 'phdr-sec';
+    const absentNote = abStaff.absent_until ? ` ⚠️ On sick leave until ${abStaff.absent_until}` : '';
+
+    // Get timetabled lessons for this teacher today
+    const lessons = getTodaysLessons(abCode, day);
+
+    const coverSuggestions = lessons.map(lesson => {
+      const available = findCoverTeachers(abCode, lesson, day, ds);
+      return {lesson, available};
+    });
+
+    html += `
+    <div class="pblock">
+      <div class="phdr ${campusHdrClass}">
+        <span>${abCode} — ${abStaff.dept} <span class="pill pill-${abStaff.campus.toLowerCase()}">${campus}</span>${absentNote}</span>
+        <span style="font-size:11px;opacity:.8">${lessons.length} period${lessons.length!==1?'s':''} to cover</span>
+      </div>
+      <div class="citems">
+    `;
+
+    if (!lessons.length) {
+      html += `<div style="padding:10px;color:#888;font-style:italic;font-size:12px">No timetabled lessons found for ${day}. Check timetable data.</div>`;
+    } else {
+      coverSuggestions.forEach(({lesson, available}) => {
+        html += `
+        <div class="citem ${campusClass}">
+          <div><strong>${lesson.period}</strong><br><span style="font-size:10px;color:#888">${lesson.time}</span></div>
+          <div><strong>${lesson.subject || 'TBC'}</strong><br><span style="font-size:10px;color:#666">${lesson.yearGroup || ''}</span></div>
+          <div><span style="background:#eee;border-radius:4px;padding:2px 6px;font-size:11px">${lesson.room || '—'}</span></div>
+          <div>
+            ${available.length ? available.slice(0,4).map(t => `<span style="display:inline-block;margin:1px;background:${t.match?'#27ae60':t.phase?'#2E75B6':'#7f8c8d'};color:white;border-radius:4px;padding:2px 7px;font-size:11px">${t.match?'🎯':t.phase?'📚':'👤'} ${t.code}</span>`).join('') : '<span style="color:#c0392b;font-size:11px">⚠️ No cover available</span>'}
+          </div>
+          <select style="font-size:11px;border-radius:4px;padding:4px;border:1px solid #ddd;width:100%">
+            <option value="">Assign cover...</option>
+            ${available.map(t => `<option value="${t.code}">${t.match?'🎯':t.phase?'📚':'👤'} ${t.code}</option>`).join('')}
+          </select>
+        </div>`;
+      });
+    }
+
+    html += '</div></div>';
+  });
+
+  grid.innerHTML = html || '<div class="no-r">No lessons to cover for selected campus on this day</div>';
+}
+
+function getTodaysLessons(teacherCode, day) {
+  // Check TIMETABLE object first
+  const tt = TIMETABLE[teacherCode];
+  if (tt && tt[day]) {
+    return Object.entries(tt[day]).map(([period, data]) => ({
+      period, time: data.time || '', subject: data.subject || '', yearGroup: data.yearGroup || '', room: data.room || ''
+    }));
+  }
+  // Return placeholder indicating lessons need to be entered
+  const s = STAFF[teacherCode];
+  if (!s) return [];
+  const campus = s.campus === 'Cross' ? 'Secondary' : s.campus;
+  const ps = PERIODS[campus] || PERIODS.Secondary;
+  // Return generic lesson slots
+  return ps.filter(p => p.type === 'lesson').slice(0,3).map(p => ({
+    period: p.p, time: p.t, subject: s.subjects[0] || 'TBC', yearGroup: 'TBC', room: 'TBC'
+  }));
+}
+
+function findCoverTeachers(abCode, lesson, day, ds) {
+  const abStaff = STAFF[abCode];
+  if (!abStaff) return [];
+  const campus = abStaff.campus === 'Cross' ? 'Secondary' : abStaff.campus;
+
+  const available = [];
+  Object.entries(STAFF).forEach(([code, s]) => {
+    if (code === abCode) return;
+    if (ABSENT.includes(code)) return;
+    if (s.role !== 'Teaching') return;
+    if (!s.days[ds]) return;
+    // Campus check — cross-campus staff can only cover if their campus day aligns
+    const sCampus = s.campus === 'Cross' ? 'Secondary' : s.campus;
+    if (sCampus !== campus && s.campus !== 'Cross') return;
+
+    const subjectMatch = s.subjects.some(sub =>
+      sub.toLowerCase().includes((lesson.subject||'').toLowerCase().split(' ')[0]) ||
+      (lesson.subject||'').toLowerCase().includes(sub.toLowerCase())
+    );
+    const phaseMatch = s.yearGroups && s.yearGroups.includes(lesson.yearGroup);
+
+    if (subjectMatch) available.push({code, match:true, phase:false});
+    else if (phaseMatch) available.push({code, match:false, phase:true});
+    else available.push({code, match:false, phase:false});
+  });
+
+  // Sort: subject match first, then phase, then other
+  available.sort((a,b) => {
+    if (a.match && !b.match) return -1;
+    if (!a.match && b.match) return 1;
+    if (a.phase && !b.phase) return -1;
+    if (!a.phase && b.phase) return 1;
+    return 0;
+  });
+
+  return available.slice(0, 8);
+}
+
+// ══════════════════════════════════════════════════
+// STAFF & WORKLOAD
+// ══════════════════════════════════════════════════
+function getMaxPeriods(s) {
+  if (s.campus === 'Senior') return WORKLOAD_LIMITS.Senior.max;
+  if (s.campus === 'Primary') {
+    if (s.stage === 'Lower' || s.stage === 'EY') return WORKLOAD_LIMITS.Primary_Lower.max;
+    return WORKLOAD_LIMITS.Primary_Upper.max;
+  }
+  return WORKLOAD_LIMITS.Secondary.max;
+}
+
+function getTotalPeriods(s) {
+  if (s.campus === 'Senior') return WORKLOAD_LIMITS.Senior.total;
+  if (s.campus === 'Primary') {
+    if (s.stage === 'Lower' || s.stage === 'EY') return WORKLOAD_LIMITS.Primary_Lower.total;
+    return WORKLOAD_LIMITS.Primary_Upper.total;
+  }
+  return WORKLOAD_LIMITS.Secondary.total;
+}
+
+function getAssignedPeriods(code) {
+  // Count from TIMETABLE, or return 0 if not built yet
+  const tt = TIMETABLE[code];
+  if (!tt) return 0;
+  let count = 0;
+  DAYS.forEach(d => {
+    if (tt[d]) count += Object.keys(tt[d]).length;
+  });
+  return count;
+}
+
+function renderWorkload() {
+  const campusFilter = document.getElementById('wl-campus').value;
+  const showFilter = document.getElementById('wl-filter').value;
+  const grid = document.getElementById('workload-grid');
+
+  let rows = '';
+  let warnings = [];
+
+  Object.entries(STAFF).forEach(([code, s]) => {
+    if (s.role === 'Admin/Grounds') return;
+    if (campusFilter !== 'all') {
+      if (campusFilter === 'Cross' && !s.cross) return;
+      if (campusFilter !== 'Cross' && s.campus !== campusFilter && !(campusFilter === 'Secondary' && s.cross)) return;
+    }
+
+    const assigned = getAssignedPeriods(code);
+    const maxP = getMaxPeriods(s);
+    const totalP = getTotalPeriods(s);
+    const pct = Math.round((assigned / maxP) * 100);
+    const fillColor = assigned > maxP ? '#c0392b' : assigned >= maxP * 0.85 ? '#E8841A' : '#27ae60';
+    const status = assigned > maxP ? 'OVER LIMIT' : assigned === 0 ? 'Not built' : `${assigned}/${maxP}`;
+    const statusColor = assigned > maxP ? '#c0392b' : assigned === 0 ? '#888' : '#27ae60';
+
+    if (assigned > maxP) warnings.push(`⚠️ ${code} is over their maximum load (${assigned}/${maxP})`);
+
+    // Days working
+    const daysIn = Object.entries(s.days).filter(([,v]) => v).map(([k]) => k.slice(0,1)).join('');
+
+    let specialFlags = '';
+    if (s.absent_until) specialFlags += `<span style="background:#fde8e8;color:#c0392b;border-radius:4px;padding:1px 5px;font-size:10px;margin-left:4px">Absent until ${s.absent_until}</span>`;
+    if (s.cross) specialFlags += `<span style="background:#f0e8ff;color:#8e44ad;border-radius:4px;padding:1px 5px;font-size:10px;margin-left:4px">Cross-campus</span>`;
+    if (s.note) specialFlags += `<span style="background:#fff3cd;color:#856404;border-radius:4px;padding:1px 5px;font-size:10px;margin-left:4px">${s.note}</span>`;
+
+    const row = `
+    <tr>
+      <td><strong>${code}</strong>${specialFlags}</td>
+      <td><span class="pill pill-${s.campus.toLowerCase()}">${s.campus}</span></td>
+      <td>${s.dept}</td>
+      <td style="font-size:11px">${s.subjects.slice(0,3).join(', ')}</td>
+      <td style="font-size:11px">${s.yearGroups.length ? s.yearGroups.join(', ') : s.role === 'Admin' ? 'Admin only' : 'TBC'}</td>
+      <td>${daysIn} <small style="color:#888">(${Object.values(s.days).filter(Boolean).length}d)</small></td>
+      <td style="min-width:100px">
+        <div style="color:${statusColor};font-weight:700;font-size:11px">${status}</div>
+        <div class="load-bar"><div class="load-fill" style="width:${Math.min(pct,100)}%;background:${fillColor}"></div></div>
+      </td>
+    </tr>`;
+
+    // Apply show filter
+    if (showFilter === 'over' && assigned <= maxP) return;
+    if (showFilter === 'under' && (assigned >= maxP * 0.5 || assigned === 0)) return;
+    if (showFilter === 'gaps' && assigned > 0) return;
+
+    rows += row;
+  });
+
+  const warningHtml = warnings.length ? `<div class="gap-banner">🚨 <strong>${warnings.length} workload issue${warnings.length>1?'s':''} detected:</strong><br>${warnings.join('<br>')}</div>` : '';
+
+  // Known gaps
+  const knownGaps = `
+  <div class="warn-banner">📋 <div><strong>Known staffing gaps for 2026/27:</strong><br>
+  🔴 <strong>Art – Primary:</strong> No dedicated art teacher. IR covers Secondary only on whole days.<br>
+  🔴 <strong>Music – Secondary A5/A6:</strong> MID days TBC. Music iGCSE at risk if not confirmed.<br>
+  🔴 <strong>Humanities – NW overloaded:</strong> History + Geography + GP across A2–A8 is unsustainable for one person. Additional hire required.<br>
+  🟡 <strong>LM absent:</strong> Returning November 2026. Primary English needs cover Sep–Oct.<br>
+  🟡 <strong>MT, JA:</strong> Subjects and FTE not yet confirmed.<br>
+  🟡 <strong>QV (new):</strong> Art + GP support is a heavy dual load for a new staff member.</div></div>`;
+
+  grid.innerHTML = `
+    ${knownGaps}
+    ${warningHtml}
+    <div class="card">
+      <div class="card-hdr">Staff Teaching Allocation — 2026/27</div>
+      <div style="overflow-x:auto">
+        <table class="data-table">
+          <thead><tr>
+            <th>Code</th><th>Campus</th><th>Dept</th><th>Subjects</th><th>Year Groups</th><th>Days</th><th>Load</th>
+          </tr></thead>
+          <tbody>${rows || '<tr><td colspan="7" class="no-r">No staff match this filter</td></tr>'}</tbody>
+        </table>
+      </div>
+      <p style="font-size:10px;color:#888;margin-top:8px">Max periods: Senior 21/30 · Secondary/Upper Primary 28/40 · Lower Primary 24/35. Load bar shows assigned vs maximum. Timetable not yet built — all loads show 0 until periods are allocated.</p>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════
+// TIMETABLE VIEW
+// ══════════════════════════════════════════════════
+function initTimetableView() {
+  const viewSel = document.getElementById('tt-view');
+  const selectEl = document.getElementById('tt-select');
+  const view = viewSel.value;
+  selectEl.innerHTML = '<option value="">— choose —</option>';
+
+  if (view === 'teacher') {
+    Object.entries(STAFF).forEach(([code, s]) => {
+      if (s.role !== 'Teaching') return;
+      const o = document.createElement('option');
+      o.value = code;
+      o.textContent = `${code} — ${s.dept} (${s.campus})`;
+      selectEl.appendChild(o);
+    });
+  } else if (view === 'campus') {
+    ['Primary','Secondary','Senior'].forEach(c => {
+      const o = document.createElement('option');
+      o.value = c;
+      o.textContent = c + ' Campus';
+      selectEl.appendChild(o);
+    });
+  } else {
+    YEAR_GROUPS.forEach(yg => {
+      const o = document.createElement('option');
+      o.value = yg.code;
+      o.textContent = yg.label;
+      selectEl.appendChild(o);
+    });
+  }
+  showTimetable();
+}
+
+function showTimetable() {
+  const view = document.getElementById('tt-view').value;
+  const sel = document.getElementById('tt-select').value;
+  const day = document.getElementById('tt-day').value;
+  const container = document.getElementById('tt-container');
+
+  if (!sel) {
+    container.innerHTML = '<div class="no-r">Select a ' + view + ' above to view timetable</div>';
+    return;
+  }
+
+  if (view === 'teacher') {
+    renderTeacherTT(sel, day, container);
+  } else {
+    container.innerHTML = `<div class="card"><div class="card-hdr">${sel} Campus — ${day}</div><p style="color:#888;padding:10px">Timetable will be built here as periods are allocated through the AI Copilot or timetabling engine. Use the Copilot tab to begin assigning lessons.</p></div>`;
+  }
+}
+
+function renderTeacherTT(code, day, container) {
+  const s = STAFF[code];
+  if (!s) return;
+  const ds = DAY_SHORT[day];
+  const campus = s.campus === 'Cross' ? 'Secondary' : s.campus;
+  const periods = PERIODS[campus] || PERIODS.Secondary;
+  const color = CAMPUS_COLORS[s.campus] || '#2E75B6';
+  const worksToday = s.days[ds];
+  const tt = TIMETABLE[code] && TIMETABLE[code][day];
+
+  let rows = periods.map(p => {
+    if (p.type === 'break') return `<tr style="background:#fff8e1"><td><strong>${p.p}</strong></td><td>${p.t}</td><td colspan="3" style="text-align:center;color:#856404;font-weight:700">BREAK</td></tr>`;
+    if (p.type === 'lunch') return `<tr style="background:#fde8e8"><td><strong>${p.p}</strong></td><td>${p.t}</td><td colspan="3" style="text-align:center;color:#c0392b;font-weight:700">LUNCH${p.note?' ('+p.note+')':''}</td></tr>`;
+    if (p.type === 'form') return `<tr style="background:#f0f8ff"><td><strong>${p.p}</strong></td><td>${p.t}</td><td colspan="3" style="text-align:center;color:#2E75B6;font-weight:600">Form Time</td></tr>`;
+    if (p.type === 'ext') return `<tr style="background:#f0fff4"><td><strong>${p.p}</strong></td><td>${p.t}</td><td colspan="3" style="text-align:center;color:#27ae60;font-size:11px">${p.note || 'Extension'}</td></tr>`;
+    const lesson = tt && tt[p.p];
+    if (lesson) {
+      return `<tr><td><strong>${p.p}</strong></td><td style="color:#888">${p.t}</td><td><strong>${lesson.subject}</strong></td><td>${lesson.yearGroup}</td><td>${lesson.room || '—'}</td></tr>`;
+    }
+    return `<tr><td><strong>${p.p}</strong></td><td style="color:#888">${p.t}</td><td style="color:#ccc;font-style:italic" colspan="3">Free / not allocated</td></tr>`;
+  }).join('');
+
+  container.innerHTML = `
+  <div class="card">
+    <div class="card-hdr" style="border-color:${color}">${code} — ${s.dept} · ${day} <span class="pill" style="background:${color}">${s.campus}</span>${!worksToday?'<span style="background:#c0392b;color:white;border-radius:12px;padding:2px 9px;font-size:10px;margin-left:8px">NOT IN TODAY</span>':''}</div>
+    ${!worksToday?'<div class="warn-banner">⚠️ '+code+' does not work on '+day+'s</div>':''}
+    ${s.absent_until?'<div class="gap-banner">⚠️ '+code+' is absent until '+s.absent_until+'</div>':''}
+    ${s.crossNote?'<div class="admin-note">🔄 '+s.crossNote+'</div>':''}
+    <div style="overflow-x:auto">
+      <table class="data-table">
+        <thead><tr><th>Period</th><th>Time</th><th>Subject</th><th>Year Group</th><th>Room</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <p style="font-size:10px;color:#888;margin-top:6px">Max ${getMaxPeriods(s)} periods/week · ${Object.values(s.days).filter(Boolean).length} days/week · ${getAssignedPeriods(code)} currently assigned</p>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════
+// TUTOR ASSIGNMENTS
+// ══════════════════════════════════════════════════
+function renderTutors() {
+  const grid = document.getElementById('tutor-grid');
+  grid.innerHTML = YEAR_GROUPS.map(yg => {
+    const campusClass = yg.campus.toLowerCase().slice(0,3);
+    const eligibleStaff = Object.entries(STAFF).filter(([code, s]) => {
+      return s.role === 'Teaching' && s.campus === yg.campus &&
+             (s.yearGroups.includes(yg.code) || s.yearGroups.length === 0);
+    });
+    const opts = eligibleStaff.map(([code]) =>
+      `<option value="${code}" ${TUTORS[yg.code]===code?'selected':''}>${code}</option>`
+    ).join('');
+    return `
+    <div class="tutor-card ${campusClass}">
+      <div class="tutor-yg">${yg.label}</div>
+      <div style="font-size:10px;color:#888;margin-bottom:6px">${yg.campus} Campus · ${yg.stage}</div>
+      <select style="width:100%;border:1.5px solid #ddd;border-radius:6px;padding:6px;font-size:12px" onchange="TUTORS['${yg.code}']=this.value">
+        <option value="">— unassigned —</option>
+        ${opts}
+      </select>
+      ${TUTORS[yg.code] ? `<div style="margin-top:5px;font-size:11px;color:#27ae60;font-weight:700">✓ ${TUTORS[yg.code]} assigned</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function saveTutors() {
+  // Re-render to show saved state
+  renderTutors();
+  alert('Tutor assignments saved for this session. Use the Copilot to make changes by voice.');
+}
+
+function resetTutors() {
+  YEAR_GROUPS.forEach(yg => { TUTORS[yg.code] = ''; });
+  renderTutors();
+}
+
+// ══════════════════════════════════════════════════
+// AI COPILOT
+// ══════════════════════════════════════════════════
+const SCHOOL_CONTEXT = `You are the SAIS Timetable Copilot for Santo António International School of Estoril, 2026/27 academic year.
+
+STRUCTURE:
+- Three campuses: Primary (Nursery–A1), Secondary (A2–A6), Senior (A7–A8)
+- Cross-campus staff must be allocated by whole day — no same-day campus splits: JS, MB, DV, DPB, IR, MF
+
+PRIMARY DAY: Start 08:30, Break 10:15–10:35, Lunch 11:20–12:05 (KG-P4) or 12:05-12:50 (A1), End 15:05. 35 periods/week lower primary, 40 upper primary. Max load: 24-25 lower, 28 upper.
+
+SECONDARY DAY: Form 08:15–08:30, P1 08:30–09:15, P2 09:15–10:00, Break 10:00–10:35, P3 10:35–11:20, P4 11:20–12:05, A2-A4 Lunch 12:05–12:50 / iGCSE P5 12:05–12:50, A2-A4 P5b/iGCSE Lunch 12:50–13:35, P6 13:35–14:20, P7 14:20–15:05, P8 15:05–15:50. 40 periods/week. Max load: 28.
+
+SENIOR DAY: Form 08:15–08:30, 6×1hr lessons (L1-L6), Break 10:30–10:50, Lunch 12:50–13:50 (walk to Secondary). 30 periods/week. Max load: 21.
+
+KEY STAFF GAPS:
+- Art in Primary: no dedicated teacher, IR is Secondary only
+- Music at iGCSE A5-A6: MID only Tue/Fri, days TBC
+- Humanities: NW carries History, Geography AND Global Perspectives A2-A8 — unsustainable without additional hire
+- LM absent until November 2026
+
+WORKLOAD LIMITS: Senior max 21/30 · Secondary+Upper Primary max 28/40 · Lower Primary max 24-25/35
+
+IGCSE OPTIONS (A5-A6): Option 1 Languages (French/Spanish/English Lit/Mandarin), Option 2 Humanities (History/Geography), Option 3 (Business/GP), Option 4 Tech (DT/CS), Option 5 Creative (Art/PE/Music*). Additional Maths blocked with Extended Maths.
+
+A LEVEL OPTIONS (A7-A8): Option 1 (History/Maths/Media/Psychology), Option 2 (Biology/Business/DT/Physics), Option 3 (Chemistry/CS/IT/Port II), Option 4 Languages (English AS/French/Mandarin/Portuguese/Spanish), Option 5 (Art/Marine Science/PE AS/Travel&Tourism). Compulsory: Environmental Management (WL+PM) + Global Perspectives AS (SVA).
+
+You can help with: timetable clashes, cover suggestions, workload analysis, staff assignments, tutor allocation, scenario modelling (with/without Psychology, with/without specific staff). Be concise and practical.`;
+
+let chatHistory = [{role:'assistant', content:'SAIS Copilot ready. I have full knowledge of the 2026/27 structure. Ask me anything about timetabling, staffing, cover or the options blocks.'}];
+
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+
+  addMsg(msg, 'user');
+  chatHistory.push({role:'user', content:msg});
+
+  const thinking = document.createElement('div');
+  thinking.className = 'msg msg-ai thinking';
+  thinking.textContent = 'Thinking...';
+  document.getElementById('chat-history').appendChild(thinking);
+  scrollChat();
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system: SCHOOL_CONTEXT,
+        messages: chatHistory
+      })
+    });
+    const data = await resp.json();
+    const reply = data.content?.[0]?.text || 'Sorry, I could not get a response.';
+    thinking.remove();
+    addMsg(reply, 'ai');
+    chatHistory.push({role:'assistant', content:reply});
+
+    // Check if the reply contains a tutor assignment instruction
+    checkForTutorCommand(msg, reply);
+  } catch(e) {
+    thinking.remove();
+    addMsg('Connection error. Please check your network and try again.', 'ai');
+  }
+}
+
+function checkForTutorCommand(msg, reply) {
+  // Simple parser for tutor assignment commands
+  const assignMatch = msg.match(/assign\s+(\w+)\s+as\s+tutor\s+for\s+(A\d|P\d|Nursery|Reception)/i);
+  if (assignMatch) {
+    const staffCode = assignMatch[1].toUpperCase();
+    const yg = assignMatch[2];
+    if (STAFF[staffCode] && TUTORS.hasOwnProperty(yg)) {
+      TUTORS[yg] = staffCode;
+      addMsg(`✓ Done — ${staffCode} has been assigned as tutor for ${yg}. Go to the Tutor Assignments tab to see the update.`, 'ai');
+    }
+  }
+}
+
+function addMsg(text, type) {
+  const div = document.createElement('div');
+  div.className = `msg msg-${type}`;
+  div.innerHTML = text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+  document.getElementById('chat-history').appendChild(div);
+  scrollChat();
+}
+
+function scrollChat() {
+  const h = document.getElementById('chat-history');
+  h.scrollTop = h.scrollHeight;
+}
+
+function clearChat() {
+  chatHistory = [{role:'assistant', content:'SAIS Copilot ready. Ask me anything about the 2026/27 timetable.'}];
+  document.getElementById('chat-history').innerHTML = '<div class="msg msg-ai"><strong>SAIS Copilot ready.</strong> Ask me anything about the 2026/27 timetable.</div>';
+}
+
+// ══════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  populateAbsentSelect();
+  // Populate tt-view listener
+  document.getElementById('tt-view').addEventListener('change', initTimetableView);
+});
+</script>
+</body>
+</html>
