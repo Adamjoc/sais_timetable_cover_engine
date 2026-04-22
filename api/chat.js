@@ -10,15 +10,29 @@ function json(res, status, body) {
 }
 
 async function supabaseFetch(path, options = {}) {
-  const base = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const headers = {
-    apikey: key,
-    Authorization: `Bearer ${key}`,
-    ...options.headers,
-  };
-  const response = await fetch(`${base}/rest/v1/${path}`, { ...options, headers });
-  return response;
+  const baseRaw = process.env.SUPABASE_URL || '';
+  const keyRaw = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+  const base = baseRaw.trim().replace(/\/+$/, '');
+  const key = keyRaw.trim();
+
+  if (!base) throw new Error('SUPABASE_URL missing');
+  if (!key) throw new Error('SUPABASE_SERVICE_ROLE_KEY missing');
+
+  const url = `${base}/rest/v1/${path}`;
+
+  try {
+    return await fetch(url, {
+      ...options,
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        ...options.headers,
+      },
+    });
+  } catch (error) {
+    throw new Error(`Supabase fetch failed for ${url}: ${error.message}`);
+  }
 }
 
 function parseTutorCommand(message) {
@@ -48,6 +62,10 @@ function normalizeYG(v) {
 
 async function getTutorMap() {
   const r = await supabaseFetch('tutor_assignments?select=year_group,teacher_code');
+  if (!r.ok) {
+    const text = await r.text();
+    throw new Error(`Supabase GET failed (${r.status}): ${text}`);
+  }
   const rows = await r.json();
   const map = {};
   for (const row of rows) map[row.year_group] = row.teacher_code || '';
@@ -63,7 +81,10 @@ async function upsertTutor(yearGroup, teacher) {
     },
     body: JSON.stringify([{ year_group: yearGroup, teacher_code: teacher }]),
   });
-  if (!r.ok) throw new Error(`Supabase save failed (${r.status})`);
+  if (!r.ok) {
+    const text = await r.text();
+    throw new Error(`Supabase save failed (${r.status}): ${text}`);
+  }
 }
 
 async function clearTutor(yearGroup) {
@@ -71,11 +92,15 @@ async function clearTutor(yearGroup) {
     method: 'DELETE',
     headers: { Prefer: 'return=representation' },
   });
-  if (!r.ok) throw new Error(`Supabase delete failed (${r.status})`);
+  if (!r.ok) {
+    const text = await r.text();
+    throw new Error(`Supabase delete failed (${r.status}): ${text}`);
+  }
 }
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });
+
   try {
     const { messages = [] } = req.body || {};
     const lastUser = [...messages].reverse().find((m) => m.role === 'user')?.content || '';
@@ -112,6 +137,15 @@ export default async function handler(req, res) {
 
     const tutorMap = await getTutorMap();
     const model = process.env.OPENAI_MODEL || 'gpt-4.1-mini';
+
+    const prompt = [
+      SCHOOL_CTX,
+      `Current tutor assignments: ${JSON.stringify(tutorMap)}`,
+      'If the user wants a tutor assignment changed, tell them the exact command format to use.',
+      '',
+      ...messages.map((m) => `${m.role}: ${String(m.content || '')}`),
+    ].join('\n');
+
     const response = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
       headers: {
@@ -120,27 +154,12 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model,
-        input: [
-          {
-            role: 'system',
-            content: [
-              {
-                type: 'output_text',
-                text:
-                  `${SCHOOL_CTX}\nCurrent tutor assignments: ${JSON.stringify(tutorMap)}\n` +
-                  `If the user wants a tutor assignment changed, tell them the exact command format to use.`,
-              },
-            ],
-          },
-          ...messages.map((m) => ({
-            role: m.role,
-            content: [{ type: 'output_text', text: String(m.content || '') }],
-          })),
-        ],
+        input: prompt,
       }),
     });
 
     const data = await response.json();
+
     if (!response.ok) {
       const message = data?.error?.message || 'OpenAI request failed';
       throw new Error(message);
