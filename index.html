@@ -294,11 +294,7 @@ select:focus,input:focus{outline:none;border-color:#2E75B6}
 <!-- ══ COPILOT ══ -->
 <div class="panel" id="panel-copilot">
 <div class="admin-note">
-  🤖 <strong>SAIS AI Copilot</strong> — knows the full 2026/27 structure, staff, timetables, options and rules.
-  &nbsp;|&nbsp; 
-  <strong>API Key:</strong>
-  <input type="password" id="api-key-input" placeholder="sk-ant-..." style="width:200px;font-size:11px;padding:4px 8px;margin:0 6px" onchange="saveKey()">
-  <span style="font-size:10px;color:#888">(required for standalone use outside Claude.ai)</span>
+  🤖 <strong>SAIS AI Copilot</strong> — connected through your secure backend. No browser API key needed once this is deployed on Vercel.
 </div>
 <div class="copilot-wrap">
   <div class="chat-history" id="chat-history">
@@ -511,26 +507,81 @@ function renderTutors(){
     return `<div class="tutor-card ${cc}"><div style="font-weight:700;font-size:13px;color:#1F4E79;margin-bottom:4px">${yg.label}</div><div style="font-size:10px;color:#888;margin-bottom:6px">${yg.campus}</div><select style="width:100%;border:1.5px solid #ddd;border-radius:6px;padding:6px;font-size:12px" onchange="TUTORS['${yg.code}']=this.value"><option value="">-- unassigned --</option>${elig.map(c=>`<option value="${c}" ${TUTORS[yg.code]===c?'selected':''}>${c}</option>`).join('')}</select>${TUTORS[yg.code]?`<div style="margin-top:4px;font-size:11px;color:#27ae60;font-weight:700">? ${TUTORS[yg.code]}</div>`:''}</div>`;
   }).join('');
 }
-function saveTutors(){renderTutors();alert('Saved.');}
-function resetTutors(){ALL_YGS.forEach(yg=>{TUTORS[yg.code]='';});renderTutors();}
-function saveKey(){savedKey=document.getElementById('api-key-input').value.trim();}
+
+async function loadTutors(){
+  try{
+    const r=await fetch('/api/tutors');
+    if(!r.ok) throw new Error('Could not load tutor assignments');
+    const d=await r.json();
+    if(d && d.tutors){
+      Object.keys(TUTORS).forEach(k=>{ TUTORS[k]=d.tutors[k]||''; });
+    }
+  }catch(e){
+    console.warn('Tutor load failed:', e.message);
+  }finally{
+    renderTutors();
+  }
+}
+async function saveTutors(){
+  try{
+    const r=await fetch('/api/tutors',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({tutors:TUTORS})
+    });
+    const d=await r.json();
+    if(!r.ok) throw new Error(d.error||'Could not save tutor assignments');
+    renderTutors();
+    alert('Tutor assignments saved.');
+  }catch(e){
+    alert('Save failed: '+e.message);
+  }
+}
+async function resetTutors(){
+  ALL_YGS.forEach(yg=>{TUTORS[yg.code]='';});
+  renderTutors();
+  await saveTutors();
+}
 async function sendMsg(){
   const input=document.getElementById('chat-input'),msg=input.value.trim();if(!msg)return;
-  input.value='';addMsg(msg,'user');chatHistory.push({role:'user',content:msg});
-  const t=document.createElement('div');t.className='msg msg-ai thinking';t.textContent='Thinking...';
-  document.getElementById('chat-history').appendChild(t);scrollChat();
-  const key=savedKey||document.getElementById('api-key-input').value.trim();
-  const hdrs={'Content-Type':'application/json','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-calls':'true'};
-  if(key)hdrs['x-api-key']=key;
+  input.value='';
+  addMsg(msg,'user');
+  chatHistory.push({role:'user',content:msg});
+  const t=document.createElement('div');
+  t.className='msg msg-ai thinking';
+  t.textContent='Thinking...';
+  document.getElementById('chat-history').appendChild(t);
+  scrollChat();
   try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:hdrs,body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:SCHOOL_CTX,messages:chatHistory})});
-    const d=await r.json();if(d.error)throw new Error(d.error.message);
-    const reply=d.content?.[0]?.text||'No response.';
-    t.remove();addMsg(reply,'ai');chatHistory.push({role:'assistant',content:reply});
-  }catch(e){t.remove();addMsg('Error: '+e.message+'. Enter API key above for standalone use.','ai');}
+    const r=await fetch('/api/chat',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({messages:chatHistory,tutors:TUTORS})
+    });
+    const d=await r.json();
+    if(!r.ok) throw new Error(d.error||'Chat request failed');
+    t.remove();
+    const reply=d.reply||'No response.';
+    if(d.updatedTutors){
+      Object.keys(TUTORS).forEach(k=>{ TUTORS[k]=d.updatedTutors[k]||''; });
+      renderTutors();
+    }
+    addMsg(reply,'ai');
+    chatHistory.push({role:'assistant',content:reply});
+  }catch(e){
+    t.remove();
+    addMsg('Error: '+e.message+'. Check your Vercel environment variables and Supabase setup.','ai');
+  }
 }
-function addMsg(text,type){const div=document.createElement('div');div.className='msg msg-'+type;div.innerHTML=String(text).replace(/\n/g,'<br>');document.getElementById('chat-history').appendChild(div);scrollChat();}
+function addMsg(text,type){const div=document.createElement('div');div.className='msg msg-'+type;div.innerHTML=String(text).replace(/
+/g,'<br>');document.getElementById('chat-history').appendChild(div);scrollChat();}
 function scrollChat(){const h=document.getElementById('chat-history');h.scrollTop=h.scrollHeight;}
-function clearChat(){chatHistory=[];document.getElementById('chat-history').innerHTML='<div class="msg msg-ai">SAIS Copilot ready.</div>';}
-document.addEventListener('DOMContentLoaded',()=>{populateAbsent();renderWorkload();initTT();document.getElementById('tt-campus').addEventListener('change',initTT);});
+function clearChat(){chatHistory=[];document.getElementById('chat-history').innerHTML='<div class="msg msg-ai"><strong>SAIS Copilot ready.</strong><br><br>Try asking:<br>• "Assign RL as tutor for A2"<br>• "Who is tutor for A5?"<br>• "What is NW\'s teaching load this year?"</div>';}
+document.addEventListener('DOMContentLoaded',async ()=>{
+  populateAbsent();
+  renderWorkload();
+  initTT();
+  document.getElementById('tt-campus').addEventListener('change',initTT);
+  await loadTutors();
+});
 </script></body></html>
