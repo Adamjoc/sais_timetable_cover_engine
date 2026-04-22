@@ -125,7 +125,7 @@ export default async function handler(req, res) {
             role: 'system',
             content: [
               {
-                type: 'input_text',
+                type: 'output_text',
                 text:
                   `${SCHOOL_CTX}\nCurrent tutor assignments: ${JSON.stringify(tutorMap)}\n` +
                   `If the user wants a tutor assignment changed, tell them the exact command format to use.`,
@@ -134,7 +134,7 @@ export default async function handler(req, res) {
           },
           ...messages.map((m) => ({
             role: m.role,
-            content: [{ type: 'input_text', text: String(m.content || '') }],
+            content: [{ type: 'output_text', text: String(m.content || '') }],
           })),
         ],
       }),
