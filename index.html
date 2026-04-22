@@ -573,8 +573,7 @@ async function sendMsg(){
     addMsg('Error: '+e.message+'. Check your Vercel environment variables and Supabase setup.','ai');
   }
 }
-function addMsg(text,type){const div=document.createElement('div');div.className='msg msg-'+type;div.innerHTML=String(text).replace(/
-/g,'<br>');document.getElementById('chat-history').appendChild(div);scrollChat();}
+function addMsg(text,type){const div=document.createElement('div');div.className='msg msg-'+type;div.innerHTML=String(text).replace(/\n/g,'<br>');document.getElementById('chat-history').appendChild(div);scrollChat();}
 function scrollChat(){const h=document.getElementById('chat-history');h.scrollTop=h.scrollHeight;}
 function clearChat(){chatHistory=[];document.getElementById('chat-history').innerHTML='<div class="msg msg-ai"><strong>SAIS Copilot ready.</strong><br><br>Try asking:<br>• "Assign RL as tutor for A2"<br>• "Who is tutor for A5?"<br>• "What is NW\'s teaching load this year?"</div>';}
 document.addEventListener('DOMContentLoaded',async ()=>{
