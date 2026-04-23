@@ -580,6 +580,7 @@ document.addEventListener('DOMContentLoaded',async ()=>{
   populateAbsent();
   renderWorkload();
   initTT();
+   attachTTEditors();
   document.getElementById('tt-campus').addEventListener('change',initTT);
   await loadTutors();
 });
@@ -588,24 +589,31 @@ document.addEventListener('DOMContentLoaded',async ()=>{
 function closeTT(){
   document.getElementById("ttPopup").style.display = "none";
 }
+   function openTTEditor(cell) {
+  currentCell = cell;
 
-function saveTT(){
-  const subject = document.getElementById("ttSubject").value;
-  const teacher = document.getElementById("ttTeacher").value;
+  const text = cell.innerText.split('\n');
+  document.getElementById('ttSubject').value = text[0] || '';
+  document.getElementById('ttTeacher').value = text[1] || '';
+  if (document.getElementById('ttRoom')) {
+    document.getElementById('ttRoom').value = text[2] || '';
+     }
+  document.getElementById('ttPopup').style.display = 'flex';
+ }
+   function saveTT() {
+  if (!currentCell) return;
 
-  if(currentCell){
-    currentCell.innerHTML = subject + "<br>" + teacher;
-  }
+  const subject = document.getElementById('ttSubject').value;
+  const teacher = document.getElementById('ttTeacher').value;
+  const room = document.getElementById('ttRoom')?.value || '';
+
+  currentCell.innerText = [subject, teacher, room].filter(Boolean).join('\n');
 
   closeTT();
 }
-
-function attachTTEditors(){
+   function attachTTEditors() {
   document.querySelectorAll('#panel-timetables td').forEach(cell => {
-    cell.addEventListener('click', () => {
-      currentCell = cell;
-      document.getElementById("ttPopup").style.display = "block";
-    });
+    cell.addEventListener('click', () => openTTEditor(cell));
   });
 }
 </script></body></html>
