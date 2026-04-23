@@ -611,10 +611,16 @@ function closeTT(){
 
   closeTT();
 }
-   function attachTTEditors() {
- document.querySelectorAll('td').forEach(cell => {
-  cell.addEventListener('click', () => openTTEditor(cell));
-});
+  function attachTTEditors() {
+  document.addEventListener('click', function(e) {
+    const cell = e.target.closest('td');
+    if (!cell) return;
+
+    const table = cell.closest('table');
+    if (!table) return;
+
+    openTTEditor(cell);
+  });
 }
 </script>
 
