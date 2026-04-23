@@ -583,4 +583,29 @@ document.addEventListener('DOMContentLoaded',async ()=>{
   document.getElementById('tt-campus').addEventListener('change',initTT);
   await loadTutors();
 });
+   let currentCell = null;
+
+function closeTT(){
+  document.getElementById("ttPopup").style.display = "none";
+}
+
+function saveTT(){
+  const subject = document.getElementById("ttSubject").value;
+  const teacher = document.getElementById("ttTeacher").value;
+
+  if(currentCell){
+    currentCell.innerHTML = subject + "<br>" + teacher;
+  }
+
+  closeTT();
+}
+
+function attachTTEditors(){
+  document.querySelectorAll('#panel-timetables td').forEach(cell => {
+    cell.addEventListener('click', () => {
+      currentCell = cell;
+      document.getElementById("ttPopup").style.display = "block";
+    });
+  });
+}
 </script></body></html>
