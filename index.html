@@ -612,8 +612,42 @@ function closeTT(){
   closeTT();
 }
    function attachTTEditors() {
-  document.querySelectorAll('#panel-timetables td').forEach(cell => {
-    cell.addEventListener('click', () => openTTEditor(cell));
-  });
+ document.querySelectorAll('td').forEach(cell => {
+  cell.addEventListener('click', () => openTTEditor(cell));
+});
 }
-</script></body></html>
+</script>
+
+<!-- Timetable Editor Popup -->
+<div id="ttPopup" style="
+  display:none;
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.5);
+  z-index:9999;
+  align-items:center;
+  justify-content:center;
+">
+  <div style="
+    background:white;
+    padding:20px;
+    border-radius:8px;
+    width:300px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.2);
+  ">
+    <h3>Edit Lesson</h3>
+
+    <input id="ttSubject" placeholder="Subject" style="width:100%;margin-bottom:8px;">
+    <input id="ttTeacher" placeholder="Teacher" style="width:100%;margin-bottom:8px;">
+    <input id="ttRoom" placeholder="Room" style="width:100%;margin-bottom:12px;">
+
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button onclick="closeTT()">Cancel</button>
+      <button onclick="saveTT()">Save</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
