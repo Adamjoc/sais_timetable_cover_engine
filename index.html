@@ -576,7 +576,371 @@ async function sendMsg(){
 function addMsg(text,type){const div=document.createElement('div');div.className='msg msg-'+type;div.innerHTML=String(text).replace(/\n/g,'<br>');document.getElementById('chat-history').appendChild(div);scrollChat();}
 function scrollChat(){const h=document.getElementById('chat-history');h.scrollTop=h.scrollHeight;}
 function clearChat(){chatHistory=[];document.getElementById('chat-history').innerHTML='<div class="msg msg-ai"><strong>SAIS Copilot ready.</strong><br><br>Try asking:<br>• "Assign RL as tutor for A2"<br>• "Who is tutor for A5?"<br>• "What is NW\'s teaching load this year?"</div>';}
-document.addEventListener('DOMContentLoaded',async ()=>{
+
+   
+   const TIMETABLE_RULES = {
+  meta: {
+    periodsPerDay: 6,
+    periodNames: ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'],
+    note: 'Central rules memory for A2-A4, iGCSE, and Seniors first-pass timetable building and validation'
+  },
+
+  teachers: {
+    // A2-A4
+    QV:  { name: 'QV',  availableDays: ['Mon','Tue','Wed','Thu','Fri'], phases: ['A2','A3','A4','A5'], subjects: ['English','Global Perspectives','Art'] },
+    NS:  { name: 'NS',  availableDays: ['Mon','Tue','Wed','Thu','Fri'], phases: ['A2','A3','A4','A5','A6'], subjects: ['English','RE'] },
+    CF:  { name: 'CF',  availableDays: ['Mon','Tue','Wed','Thu','Fri'], phases: ['A2','A3','A4'], subjects: ['Maths','Science'] },
+    MO:  { name: 'MO',  availableDays: ['Mon','Tue','Wed','Thu','Fri'], phases: ['A3','A4','A5','A6'], subjects: ['Maths','Additional Maths'] },
+    NW:  { name: 'NW',  availableDays: ['Mon','Tue','Wed','Thu','Fri'], phases: ['A2','A3','A4','A5'], subjects: ['Geography','History','Global Perspectives'] },
+    MID: { name: 'MID', availableDays: ['Mon','Tue','Wed','Thu','Fri'], phases: ['A2','A3','A4','A5','A6'], subjects: ['Music','Performing Arts'] },
+    RL:  { name: 'RL',  availableDays: ['Mon','Tue','Wed','Thu','Fri'], phases: ['A2','A3','A4'], subjects: ['Portuguese 1st'] },
+    SA:  { name: 'SA',  availableDays: ['Mon','Tue','Wed','Thu','Fri'], phases: ['A2','A3','A4'], subjects: ['Portuguese 2nd'] },
+    FA:  { name: 'FA',  availableDays: ['Mon','Tue','Wed','Thu','Fri'], phases: ['A2','A3','A4'], subjects: ['PE'] },
+    NJW: { name: 'NJW', availableDays: ['Mon','Tue','Wed','Thu','Fri'], phases: ['A2','A3','A5','A6'], subjects: ['DT'] },
+    FPV: { name: 'FPV', availableDays: ['Mon','Tue','Wed','Thu','Fri'], phases: ['A4','A5','A6'], subjects: ['DT','PE'] },
+    IR:  { name: 'IR',  availableDays: ['Mon','Tue','Wed','Thu','Fri'], phases: ['A2','A3','A4'], subjects: ['Art'] },
+
+    // iGCSE
+    AB:  { name: 'AB',  availableDays: ['Mon','Tue','Wed','Thu','Fri'], phases: ['A5','A6'], subjects: ['French'] },
+    XP:  { name: 'XP',  availableDays: ['Mon','Tue','Wed','Thu','Fri'], phases: ['A5','A6'], subjects: ['Spanish'] },
+    ES:  { name: 'ES',  availableDays: ['Mon','Tue','Wed','Thu','Fri'], phases: ['A5','A6','A7','A8'], subjects: ['English Language','English Literature'] },
+    ML:  { name: 'ML',  availableDays: ['Mon','Tue','Wed','Thu','Fri'], phases: ['A5','A6'], subjects: ['Mandarin'] },
+    WL:  { name: 'WL',  availableDays: ['Mon','Tue','Wed','Thu','Fri'], phases: ['A6','A7','A8'], subjects: ['History','Travel and Tourism','Environmental Management'] },
+    AOC: { name: 'AOC', availableDays: ['Mon','Tue','Wed','Thu','Fri'], phases: ['A5','A6'], subjects: ['Geography'] },
+    CV:  { name: 'CV',  availableDays: ['Mon','Tue','Wed','Thu','Fri'], phases: ['A5','A6'], subjects: ['Business Studies'] },
+    MK:  { name: 'MK',  availableDays: ['Mon','Tue','Wed','Thu','Fri'], phases: ['A5','A6','A7','A8'], subjects: ['Business Studies','Business'] },
+    SVA: { name: 'SVA', availableDays: ['Mon','Tue','Wed','Thu','Fri'], phases: ['A5','A6','A7','A8'], subjects: ['Global Perspectives','Psychology'] },
+    VF:  { name: 'VF',  availableDays: ['Mon','Tue','Wed','Thu','Fri'], phases: ['A5','A6'], subjects: ['Computer Science'] },
+    JS:  { name: 'JS',  availableDays: ['Mon','Tue','Wed','Thu','Fri'], phases: ['A5','A6','A7','A8'], subjects: ['ICT','Computer Science'] },
+    DV:  { name: 'DV',  availableDays: ['Mon','Tue','Wed','Thu','Fri'], phases: ['A5','A6','A7','A8'], subjects: ['PE','PE Option'] },
+    PK:  { name: 'PK',  availableDays: ['Mon','Tue','Wed','Thu','Fri'], phases: ['A5','A6','A7','A8'], subjects: ['Maths','Additional Maths','Extended Maths'] },
+    CP:  { name: 'CP',  availableDays: ['Mon','Tue','Wed','Thu','Fri'], phases: ['A5','A6','A7','A8'], subjects: ['Extended Maths','Physics'] },
+
+    // Seniors
+    PM:  { name: 'PM',  availableDays: ['Mon','Tue','Wed','Thu','Fri'], phases: ['A7','A8'], subjects: ['Biology','Environmental Management','Marine Science'] },
+    MD:  { name: 'MD',  availableDays: ['Mon','Tue','Thu'], phases: ['A7','A8'], subjects: ['Chemistry'], partTime: true },
+    TS:  { name: 'TS',  availableDays: ['Mon','Tue','Thu'], phases: ['A7','A8'], subjects: ['Spanish'], partTime: true },
+    EH:  { name: 'EH',  availableDays: ['Wed','Fri'], phases: ['A7','A8'], subjects: ['Media Studies'], partTime: true },
+    DPB: { name: 'DPB', availableDays: ['Mon','Tue','Wed','Thu'], phases: ['A7','A8','A5','A6'], subjects: ['Portuguese','Portuguese II'], partTime: true, crossCampus: true },
+    MB:  { name: 'MB',  availableDays: ['Mon','Tue','Wed','Thu','Fri'], phases: ['A5','A6','A7','A8'], subjects: ['DT','Art'], crossCampus: true }
+  },
+
+  phases: {
+    A2_A4: {
+      yearGroups: ['A2','A3','A4'],
+      description: 'Lower secondary shared rules',
+      subjectRules: {
+        English: {
+          periodsPerWeek: 5,
+          pattern: { doubles: 1, singles: 3 },
+          teachers: { A2: 'QV', A3: 'NS', A4: 'NS' }
+        },
+        Maths: {
+          periodsPerWeek: 6,
+          pattern: { doublesPreferred: true, singlesAllowed: true },
+          teachers: { A2: 'CF', A3: 'MO', A4: 'MO' }
+        },
+        Science: {
+          periodsPerWeek: 6,
+          pattern: { doublesPreferred: true, singlesAllowed: true },
+          teachers: { A2: 'CF', A3: 'CF', A4: 'CF' }
+        },
+        Geography: {
+          periodsPerWeek: 2,
+          pattern: { singlesOnly: true },
+          teacher: 'NW'
+        },
+        History: {
+          periodsPerWeek: 2,
+          pattern: { singlesOnly: true },
+          teacher: 'NW'
+        },
+        'Global Perspectives': {
+          periodsPerWeek: 1,
+          pattern: { singlesOnly: true },
+          teacher: 'QV'
+        },
+        'Music and Performing Arts': {
+          periodsPerWeek: 2,
+          pattern: { singlesOnly: true },
+          teacher: 'MID'
+        },
+        RE: {
+          periodsPerWeek: 1,
+          pattern: { singlesOnly: true },
+          teacher: 'NS'
+        },
+        ICT: {
+          periodsPerWeek: 2,
+          pattern: { doublesOnly: true },
+          teacher: 'JS',
+          groups: ['alpha','beta']
+        },
+        'Portuguese 1st': {
+          periodsPerWeek: 3,
+          pattern: { singlesOnly: true },
+          teacher: 'RL'
+        },
+        'Portuguese 2nd': {
+          periodsPerWeek: 3,
+          pattern: { singlesOnly: true },
+          teacher: 'SA'
+        },
+        Spanish: {
+          periodsPerWeek: 2,
+          pattern: { doublesOnly: true },
+          teacher: 'XP',
+          groups: ['alpha','beta']
+        },
+        PE: {
+          periodsPerWeek: 4,
+          pattern: { doubles: 2, singles: 0 },
+          teacher: 'FA',
+          additionalStaffRequired: true
+        },
+        'DT / Art': {
+          periodsPerWeek: 2,
+          pattern: { doublesOnly: true },
+          teachers: { DT: ['NJW','FPV'], Art: ['IR'] },
+          groups: ['alpha','beta']
+        },
+        PSHE: {
+          periodsPerWeek: 1,
+          pattern: { singlesOnly: true },
+          teacher: 'Tutor'
+        }
+      },
+      hardConstraints: [
+        'Spanish and ICT must be taught at the same time',
+        'A3 and A4 Maths and Science must be taught at the same time',
+        'Portuguese 1st and Portuguese 2nd must run at the same time',
+        'DT and Art must run at the same time by alpha/beta grouping',
+        'PE requires two doubles per week',
+        'English is one double plus three singles',
+        'Geography and History are two singles each'
+      ],
+      simultaneousBlocks: [
+        { name: 'Spanish_ICT_Block', subjects: ['Spanish','ICT'], type: 'same_time' },
+        { name: 'Portuguese_Block', subjects: ['Portuguese 1st','Portuguese 2nd'], type: 'same_time' },
+        { name: 'DT_Art_Block', subjects: ['DT','Art'], type: 'same_time_by_group' },
+        { name: 'A3_A4_Maths_Science', subjects: ['Maths','Science'], type: 'same_time_for_A3_A4' }
+      ]
+    },
+
+    IGCSE: {
+      yearGroups: ['A5','A6'],
+      description: 'iGCSE shared rules',
+      subjectRules: {
+        'Option 1 Languages': {
+          periodsPerWeek: 3,
+          pattern: { doublesAllowed: true, singlesAllowed: true, notAllSingles: true },
+          subjects: ['French','Spanish','English Literature','Mandarin'],
+          teachers: ['AB','XP','ES','ML']
+        },
+        'History / Geography': {
+          periodsPerWeek: 4,
+          pattern: { doubles: 2, singles: 0, ideal: true },
+          subjects: ['History','Geography'],
+          teachers: { A5: { History: 'NW', Geography: 'AOC' }, A6: { History: 'WL', Geography: 'AOC' } }
+        },
+        'Business / Global': {
+          periodsPerWeek: 4,
+          pattern: { doublesOnly: true },
+          subjects: ['Business Studies','Global Perspectives'],
+          teachers: ['CV_or_MK','SVA_or_NW_or_QV']
+        },
+        'DT / CS / ICT': {
+          periodsPerWeek: 4,
+          pattern: { doublesOnly: true },
+          subjects: ['DT','Computer Science','ICT'],
+          teachers: ['MB','NJW','FPV','VF','JS']
+        },
+        'Art / PE / Music': {
+          periodsPerWeek: 4,
+          pattern: { doubles: 1, singles: 2 },
+          subjects: ['Art and Design','PE','Music'],
+          teachers: ['QV','DV','MID']
+        },
+        'Additional / Extended Maths': {
+          periodsPerWeek: 6,
+          pattern: { doublesOnly: true, doubles: 3 },
+          subjects: ['Additional Maths','Extended Maths'],
+          teachers: ['PK','MO','CP']
+        },
+        English: {
+          periodsPerWeek: 4,
+          pattern: { doubles: 1, singles: 2 },
+          teachers: ['NS','QV'],
+          notes: ['A5 needs 1 RE period with NS', 'A5/A6 English alpha and beta run at the same time']
+        },
+        Science: {
+          periodsPerWeek: 6,
+          pattern: { doublesOnly: true, doubles: 3 },
+          teacher: 'TBA'
+        },
+        RE: {
+          periodsPerWeek: 1,
+          pattern: { singlesOnly: true },
+          teacher: 'NS',
+          yearGroups: ['A5']
+        }
+      },
+      hardConstraints: [
+        'Option 1 subjects must be taught together',
+        'History and Geography run at the same time across A5/A6',
+        'Business Studies and Global Perspectives must be doubles only and run at the same time',
+        'DT and Computer Science and ICT must run at the same time and must be doubles',
+        'Art and Design and PE and Music run at the same time',
+        'Additional Maths and Extended Maths must run at the same time',
+        'English is 2 singles and 1 double',
+        'Science is 3 doubles',
+        'A5 has 1 RE period with NS'
+      ],
+      simultaneousBlocks: [
+        { name: 'Option1_Block', subjects: ['French','Spanish','English Literature','Mandarin'], type: 'same_time' },
+        { name: 'History_Geography_Block', subjects: ['History','Geography'], type: 'same_time' },
+        { name: 'Business_Global_Block', subjects: ['Business Studies','Global Perspectives'], type: 'same_time' },
+        { name: 'DT_CS_ICT_Block', subjects: ['DT','Computer Science','ICT'], type: 'same_time' },
+        { name: 'Art_PE_Music_Block', subjects: ['Art and Design','PE','Music'], type: 'same_time' },
+        { name: 'AddMaths_ExtMaths_Block', subjects: ['Additional Maths','Extended Maths'], type: 'same_time' }
+      ]
+    },
+
+    SENIORS: {
+      yearGroups: ['A7','A8'],
+      description: 'Senior / A Level rules',
+      subjectRules: {
+        Maths: {
+          mustIncludeDoubles: true,
+          preferredPattern: 'double-heavy',
+          teacher: 'PK'
+        },
+        Physics: {
+          mustIncludeDoubles: true,
+          preferredPattern: 'double-heavy',
+          teacher: 'CP'
+        },
+        Biology: {
+          mustIncludeDoubles: true,
+          preferredPattern: 'double-heavy',
+          teacher: 'PM'
+        },
+        Chemistry: {
+          mustIncludeDoubles: true,
+          preferredPattern: 'double-heavy',
+          teacher: 'MD',
+          availableDaysOnly: ['Mon','Tue','Thu']
+        },
+        'English Language / Literature': {
+          minOneDouble: true,
+          teacher: 'ES'
+        },
+        'History / Env Mgmt / T&T': {
+          minOneDouble: true,
+          teacher: 'WL'
+        },
+        Business: {
+          minOneDouble: true,
+          teacher: 'MK'
+        },
+        'Global Perspectives': {
+          minOneDouble: true,
+          teacher: 'SVA'
+        },
+        Psychology: {
+          minOneDouble: true,
+          teacher: 'SVA',
+          cannotShareBlockWith: ['Global Perspectives']
+        },
+        Spanish: {
+          minOneDouble: false,
+          singleHeavy: true,
+          maxDoublesPerGroup: 1,
+          teacher: 'TS',
+          availableDaysOnly: ['Mon','Tue','Thu']
+        },
+        'Media Studies': {
+          minOneDouble: false,
+          singleHeavy: true,
+          maxDoublesPerGroup: 1,
+          teacher: 'EH',
+          availableDaysOnly: ['Wed','Fri']
+        },
+        'Marine Science': {
+          minOneDouble: true,
+          practicalSubject: true,
+          teacher: 'PM'
+        },
+        'PE Option': {
+          minOneDouble: true,
+          practicalSubject: true,
+          teacher: 'DV'
+        },
+        DT: {
+          minOneDouble: true,
+          practicalSubject: true,
+          teacher: 'MB'
+        },
+        Art: {
+          minOneDouble: true,
+          practicalSubject: true,
+          teacher: 'MB'
+        },
+        Portuguese: {
+          minOneDouble: true,
+          teacher: 'DPB',
+          availableDaysOnly: ['Mon','Tue','Wed','Thu']
+        },
+        'Portuguese II': {
+          minOneDouble: true,
+          teacher: 'DPB',
+          availableDaysOnly: ['Mon','Tue','Wed','Thu']
+        },
+        'Computer Science / ICT': {
+          minOneDouble: true,
+          teacher: 'JS'
+        },
+        'Compulsory PE': {
+          periodsPerWeek: 2,
+          pattern: { doubles: 1, singles: 0 },
+          teacher: 'DV'
+        }
+      },
+      hardConstraints: [
+        'Maths, Physics, Biology and Chemistry must run as doubles in both A7 and A8',
+        'Every other subject should ideally have at least one double',
+        'DT, Art, Marine Science and PE Option must have at least one double',
+        'Media Studies must be entirely on Wednesday and Friday',
+        'Chemistry must be entirely on Monday, Tuesday and Thursday',
+        'Spanish must be entirely on Monday, Tuesday and Thursday',
+        'Portuguese and Portuguese II must be Monday to Thursday only',
+        'Psychology cannot share a block with Global Perspectives',
+        'Chemistry cannot share a block with Spanish',
+        'Compulsory PE should be one double only'
+      ],
+      teacherLoadChecks: [
+        { teacher: 'EH', maxAvailablePeriods: 12, note: 'Wed/Fri only across A7 and A8' },
+        { teacher: 'MD', maxAvailablePeriods: 18, note: 'Mon/Tue/Thu only across A7 and A8' },
+        { teacher: 'TS', maxAvailablePeriods: 18, note: 'Mon/Tue/Thu only across A7 and A8' },
+        { teacher: 'DPB', maxAvailablePeriods: 24, note: 'Mon-Thu only, cross-campus' }
+      ],
+      optionPlacementOrder: [
+        'Media Studies',
+        'Chemistry',
+        'Spanish',
+        'Portuguese / Portuguese II',
+        'Psychology',
+        'Compulsory PE',
+        'Everything else'
+      ],
+      mutualExclusions: [
+        { subjects: ['Psychology','Global Perspectives'], reason: 'Same teacher SVA' },
+        { subjects: ['Chemistry','Spanish'], reason: 'Same constrained day pattern' }
+      ]
+    }
+  }
+};
+   document.addEventListener('DOMContentLoaded',async ()=>{
   populateAbsent();
   renderWorkload();
   initTT();
