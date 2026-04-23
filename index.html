@@ -218,6 +218,16 @@ select:focus,input:focus{outline:none;border-color:#2E75B6}
     <button class="btn btn-gold" onclick="printTT()">🖨️ Print A3</button>
   </div>
 </div>
+   <div id="ttWarningsPanel" style="margin:12px 0;padding:12px 14px;border:1px solid #d9e2ec;border-radius:10px;background:#fff8e1;">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+    <h3 style="margin:0;font-size:16px;">Timetable warnings</h3>
+    <button onclick="runTimetableValidation()" style="padding:8px 12px;border:none;border-radius:8px;cursor:pointer;background:#1F4E79;color:white;">
+      Run validation
+    </button>
+  </div>
+  <div id="ttWarningsSummary" style="margin-top:8px;font-weight:700;">No validation run yet.</div>
+  <ul id="ttWarningsList" style="margin:10px 0 0 18px;padding:0;"></ul>
+</div>
 <div class="day-tabs" id="day-tabs">
   <div class="day-tab active" onclick="selectDay('Monday',this)">Monday</div>
   <div class="day-tab" onclick="selectDay('Tuesday',this)">Tuesday</div>
@@ -940,13 +950,158 @@ function clearChat(){chatHistory=[];document.getElementById('chat-history').inne
     }
   }
 };
+function getVisibleTimetableDay() {
+  const activeTab = document.querySelector('.day-tab.active, .tab-btn.active, button.active');
+  if (!activeTab) return 'Unknown';
+  return activeTab.textContent.trim();
+}
+
+function getVisibleTimetableTables() {
+  return Array.from(document.querySelectorAll('table')).filter(t => {
+    return t.offsetParent !== null;
+  });
+}
+
+function getCellText(cell) {
+  return (cell.innerText || cell.textContent || '').replace(/\s+/g, ' ').trim();
+}
+
+function addWarning(warnings, text, severity = 'warning') {
+  warnings.push({ text, severity });
+}
+
+function updateWarningsPanel(warnings) {
+  const summary = document.getElementById('ttWarningsSummary');
+  const list = document.getElementById('ttWarningsList');
+  if (!summary || !list) return;
+
+  list.innerHTML = '';
+
+  if (!warnings.length) {
+    summary.textContent = 'No issues found in this first-pass validation.';
+    return;
+  }
+
+  summary.textContent = `${warnings.length} warning${warnings.length === 1 ? '' : 's'} found.`;
+
+  warnings.forEach(w => {
+    const li = document.createElement('li');
+    li.textContent = w.text;
+    li.style.marginBottom = '6px';
+    if (w.severity === 'error') li.style.color = '#b00020';
+    if (w.severity === 'warning') li.style.color = '#7a4f01';
+    list.appendChild(li);
+  });
+}
+
+function validateTeacherDayConstraints(warnings) {
+  const day = getVisibleTimetableDay();
+  if (day === 'Unknown') return;
+
+  const restrictedTeachers = Object.values(TIMETABLE_RULES.teachers).filter(t => Array.isArray(t.availableDays) && t.availableDays.length < 5);
+
+  document.querySelectorAll('td').forEach(cell => {
+    const text = getCellText(cell);
+    if (!text) return;
+
+    restrictedTeachers.forEach(teacher => {
+      const teacherCode = teacher.name;
+      const appears = text.includes(teacherCode);
+      if (appears && !teacher.availableDays.includes(day.slice(0,3))) {
+        addWarning(
+          warnings,
+          `${teacherCode} appears on ${day}, but is only available on ${teacher.availableDays.join(', ')}.`,
+          'error'
+        );
+      }
+    });
+  });
+}
+
+function validateSeniorMutualExclusions(warnings) {
+  const pageText = document.body.innerText || '';
+
+  TIMETABLE_RULES.phases.SENIORS.mutualExclusions.forEach(rule => {
+    const [a, b] = rule.subjects;
+    if (pageText.includes(a) && pageText.includes(b)) {
+      addWarning(
+        warnings,
+        `Check Senior blocking: ${a} and ${b} must not share the same option block (${rule.reason}).`
+      );
+    }
+  });
+}
+
+function validateTeacherLoadCaps(warnings) {
+  const allText = document.body.innerText || '';
+
+  TIMETABLE_RULES.phases.SENIORS.teacherLoadChecks.forEach(check => {
+    const regex = new RegExp(`\\b${check.teacher}\\b`, 'g');
+    const matches = allText.match(regex);
+    const count = matches ? matches.length : 0;
+
+    if (count > check.maxAvailablePeriods) {
+      addWarning(
+        warnings,
+        `${check.teacher} appears ${count} times, above their available cap of ${check.maxAvailablePeriods} (${check.note}).`,
+        'error'
+      );
+    } else if (count > Math.floor(check.maxAvailablePeriods * 0.85)) {
+      addWarning(
+        warnings,
+        `${check.teacher} is close to overload at ${count}/${check.maxAvailablePeriods} periods (${check.note}).`
+      );
+    }
+  });
+}
+
+function validateRequiredSeniorSubjects(warnings) {
+  const text = document.body.innerText || '';
+  ['Maths', 'Physics', 'Biology', 'Chemistry'].forEach(subject => {
+    if (!text.includes(subject)) {
+      addWarning(warnings, `Senior check: ${subject} is not visible in the current timetable view.`, 'warning');
+    }
+  });
+}
+
+function validateA2A4HardRules(warnings) {
+  addWarning(warnings, 'A2-A4 check reminder: Spanish and ICT must run at the same time.');
+  addWarning(warnings, 'A2-A4 check reminder: A3 and A4 Maths and Science must run at the same time.');
+  addWarning(warnings, 'A2-A4 check reminder: Portuguese 1st and Portuguese 2nd must run at the same time.');
+  addWarning(warnings, 'A2-A4 check reminder: DT and Art must run at the same time by alpha/beta grouping.');
+}
+
+function validateIGCSEHardRules(warnings) {
+  addWarning(warnings, 'iGCSE check reminder: DT, Computer Science and ICT must run at the same time and must be doubles.');
+  addWarning(warnings, 'iGCSE check reminder: Business Studies and Global Perspectives must be doubles only.');
+  addWarning(warnings, 'iGCSE check reminder: Additional Maths and Extended Maths must run at the same time.');
+  addWarning(warnings, 'iGCSE check reminder: A5 needs 1 RE period with NS.');
+}
+
+function runTimetableValidation() {
+  const warnings = [];
+
+  validateTeacherDayConstraints(warnings);
+  validateSeniorMutualExclusions(warnings);
+  validateTeacherLoadCaps(warnings);
+  validateRequiredSeniorSubjects(warnings);
+  validateA2A4HardRules(warnings);
+  validateIGCSEHardRules(warnings);
+
+  updateWarningsPanel(warnings);
+  return warnings;
+}
    document.addEventListener('DOMContentLoaded',async ()=>{
   populateAbsent();
   renderWorkload();
   initTT();
    attachTTEditors();
-  document.getElementById('tt-campus').addEventListener('change',initTT);
+ document.getElementById('tt-campus').addEventListener('change', () => {
+  initTT();
+  setTimeout(runTimetableValidation, 50);
+});
   await loadTutors();
+      runTimetableValidation();
 });
    let currentCell = null;
 
