@@ -1,586 +1,809 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SAIS 2026/27 – Timetable & Cover Engine</title>
-<style>
-/* ═══════ BASE ═══════ */
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Arial,sans-serif;background:#f0f4f8;color:#1a1a2e;font-size:13px}
-header{background:linear-gradient(135deg,#1F4E79,#2E75B6);color:white;padding:12px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:relative}
-header img.logo{height:52px;width:auto;border-radius:4px;background:white;padding:3px}
-header h1{font-size:17px;font-weight:700}
-header p{font-size:11px;opacity:.85}
-.badge{background:rgba(255,255,255,.2);border-radius:20px;padding:3px 10px;font-size:11px;white-space:nowrap}
-.tabs{display:flex;background:#1F4E79;border-bottom:3px solid #2E75B6;overflow-x:auto;flex-wrap:nowrap}
-.tab{padding:10px 16px;cursor:pointer;color:rgba(255,255,255,.7);font-size:12px;font-weight:600;border-bottom:3px solid transparent;margin-bottom:-3px;white-space:nowrap;transition:all .15s}
-.tab:hover{color:white;background:rgba(255,255,255,.1)}
-.tab.active{color:white;border-bottom-color:#FFD700;background:rgba(255,255,255,.15)}
-.panel{display:none;padding:16px}
-.panel.active{display:block}
-.controls{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;background:white;padding:14px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:14px}
-.cg{display:flex;flex-direction:column;gap:4px}
-.cg label{font-size:10px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.5px}
-select,input[type=text],input[type=password]{border:1.5px solid #ddd;border-radius:6px;padding:7px 10px;font-size:13px;background:white}
-select:focus,input:focus{outline:none;border-color:#2E75B6}
-.btn{padding:7px 14px;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;transition:all .15s}
-.btn-blue{background:#2E75B6;color:white}.btn-blue:hover{background:#1F4E79}
-.btn-red{background:#c0392b;color:white}.btn-red:hover{background:#a93226}
-.btn-green{background:#27ae60;color:white}.btn-green:hover{background:#1e8449}
-.btn-gold{background:#E8841A;color:white}.btn-gold:hover{background:#c97216}
-.btn-grey{background:#7f8c8d;color:white}.btn-grey:hover{background:#626f70}
-.no-r{text-align:center;padding:30px;color:#aaa;font-size:14px}
-.absent-tags{display:flex;flex-wrap:wrap;gap:5px;min-width:200px;min-height:36px;border:1.5px dashed #2E75B6;border-radius:6px;padding:5px 8px;background:#f8fbff;align-items:center}
-.atag{background:#c0392b;color:white;border-radius:12px;padding:3px 10px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:4px}
-.atag .x{cursor:pointer;font-size:14px;line-height:1}
-.stats-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
-.stat{background:white;border-radius:8px;padding:10px 14px;box-shadow:0 2px 6px rgba(0,0,0,.07);flex:1;min-width:100px;text-align:center}
-.stat-n{font-size:22px;font-weight:700;color:#2E75B6}
-.stat-l{font-size:11px;color:#888;margin-top:2px}
-.warn{background:#fff3cd;border:1px solid #ffc107;border-radius:7px;padding:8px 12px;font-size:12px;margin-bottom:12px}
-.gap-bar{background:#fde8e8;border:1px solid #c0392b;border-radius:7px;padding:8px 12px;font-size:12px;margin-bottom:8px}
-.admin-note{background:#fff8e1;border:1px solid #fdd835;border-radius:7px;padding:8px 12px;font-size:12px;margin-bottom:12px}
-/* Cover */
-.pblock{background:white;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.07);overflow:hidden;margin-bottom:10px}
-.phdr{color:white;padding:9px 14px;font-weight:700;font-size:13px;display:flex;justify-content:space-between;align-items:center}
-.phdr-pri{background:#27ae60}.phdr-sec{background:#2E75B6}.phdr-sen{background:#E8841A}
-.citem{border-radius:7px;padding:10px 12px;display:grid;grid-template-columns:120px 110px 90px 1fr 110px;gap:8px;align-items:start;font-size:12px;border-left:5px solid #ccc;margin:4px 8px}
-.citem.pri{border-left-color:#27ae60;background:#f0fff4}
-.citem.sec{border-left-color:#2E75B6;background:#f0f8ff}
-.citem.sen{border-left-color:#E8841A;background:#fff8f0}
-/* Day tabs for timetable */
-.day-tabs{display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap}
-.day-tab{padding:7px 16px;border-radius:8px 8px 0 0;cursor:pointer;font-size:12px;font-weight:700;border:2px solid #ddd;border-bottom:none;background:#eee;color:#555}
-.day-tab.active{background:#1F4E79;color:white;border-color:#1F4E79}
-.day-tab:hover:not(.active){background:#d0dbe8;border-color:#2E75B6;color:#1F4E79}
-/* ═══════════════════════════════════════
-   TIMETABLE PRINT VIEW — A3 landscape
-   Book Antiqua — identical to current app
-   ═══════════════════════════════════════ */
-@media print {
-  @page{size:A3 landscape;margin:7mm}
-  body>*{display:none!important}
-  #print-view{display:block!important}
-  #print-view{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
-}
-#print-view{display:none}
-#print-view{
-  font-family:'Book Antiqua',Palatino,'Palatino Linotype',Georgia,serif;
-  background:white;color:#000;padding:3mm;width:100%;box-sizing:border-box
-}
-.pv-banner{display:flex;align-items:center;justify-content:space-between;border-bottom:2.5px solid #000;padding-bottom:4px;margin-bottom:5px}
-.pv-banner-left{flex:1}
-.pv-school{font-size:9pt;font-weight:bold;letter-spacing:1.5px;text-transform:uppercase}
-.pv-day{font-size:20pt;font-weight:bold;letter-spacing:3px;text-transform:uppercase;line-height:1.1}
-.pv-campus{font-size:12pt;font-weight:bold;color:#444}
-.pv-meta{font-size:7pt;color:#555;margin-top:2px}
-.pv-logo{height:50px;width:auto;margin-left:10px}
-.pv-tt{width:100%;border-collapse:collapse;table-layout:fixed;font-family:'Book Antiqua',Palatino,Georgia,serif}
-.pv-tt td,.pv-tt th{border:0.75px solid #888;text-align:center;vertical-align:middle;padding:1px 2px;word-wrap:break-word;overflow:hidden;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.c-per{width:20px;font-size:8pt}
-.c-time{width:36px;font-size:7pt;line-height:1.2}
-.c-gap{width:5px;border:none!important;background:white!important;padding:0}
-.c-lesson{font-size:8pt;font-weight:bold;line-height:1.3}
-.c-room{font-size:7pt;font-weight:bold;border-left:1px dotted #bbb!important;width:22px}
-.border-section{border-left:2px solid #000!important}
-.row-section td{font-size:13pt;font-weight:bold;letter-spacing:1px;padding:2px 0;border:1px solid #000;background:white;height:22px}
-.row-class td{font-size:11pt;font-weight:bold;padding:3px 2px;border:1px solid #000;line-height:1.3;height:50px}
-.row-period td{height:50px}
-.row-break td{font-size:12pt;font-weight:bold;letter-spacing:2px;height:40px;border:1px solid #999}
-.row-lunch td{font-size:10pt;font-weight:bold;letter-spacing:1px;height:36px;border:1px solid #bbb;background:#fff8f0}
-.row-form td{font-size:9pt;letter-spacing:1px;height:28px;border:1px solid #ccc;background:#f8fbff}
-.row-period .c-per,.row-break .c-per{font-size:8pt;font-weight:normal}
-.row-period .c-time,.row-break .c-time{font-size:7pt;font-weight:normal;line-height:1.3}
-/* phase colour bands */
-.bg-pri{background:#E8F8F0}
-.bg-sec{background:#EBF5FB}
-.bg-sen{background:#FFF3E0}
-.pv-footer{margin-top:4px;font-family:Arial,sans-serif;font-size:7pt;color:#888;border-top:1px solid #ccc;padding-top:3px;display:flex;justify-content:space-between}
-/* Copilot */
-.copilot-wrap{display:flex;flex-direction:column;height:calc(100vh - 200px);min-height:400px}
-.chat-history{flex:1;overflow-y:auto;padding:10px;background:white;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.07);margin-bottom:10px;display:flex;flex-direction:column;gap:10px}
-.msg{max-width:82%;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.5}
-.msg-user{background:#2E75B6;color:white;align-self:flex-end;border-bottom-right-radius:3px}
-.msg-ai{background:#f0f4f8;color:#1a1a2e;align-self:flex-start;border-bottom-left-radius:3px}
-.chat-input-row{display:flex;gap:8px}
-.chat-input-row input[type=text]{flex:1;border:1.5px solid #2E75B6;border-radius:8px;padding:10px 14px;font-size:13px}
-.thinking{color:#888;font-style:italic;font-size:12px}
-/* Workload */
-.data-table{width:100%;border-collapse:collapse;font-size:12px}
-.data-table th{background:#1F4E79;color:white;padding:7px 10px;text-align:left;font-size:11px}
-.data-table td{border-bottom:1px solid #e8e8e8;padding:6px 10px;vertical-align:top}
-.data-table tr:hover td{background:#f5f9ff}
-.load-bar{height:7px;border-radius:4px;background:#e0e0e0;overflow:hidden;margin-top:3px}
-.load-fill{height:100%;border-radius:4px}
-.pill{display:inline-block;border-radius:12px;padding:2px 9px;font-size:10px;font-weight:700;color:white}
-.pill-pri{background:#27ae60}.pill-sec{background:#2E75B6}.pill-sen{background:#E8841A}.pill-x{background:#8e44ad}
-/* Tutor */
-.tutor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
-.tutor-card{background:white;border-radius:8px;padding:12px;box-shadow:0 2px 6px rgba(0,0,0,.07);border-top:3px solid #2E75B6}
-.tutor-card.pri{border-top-color:#27ae60}.tutor-card.sen{border-top-color:#E8841A}
-/* Options */
-.opt-table{width:100%;border-collapse:collapse;font-size:11px}
-.opt-table th{background:#E8841A;color:white;padding:7px 10px;text-align:left;font-weight:700}
-.opt-table td{border:1px solid #f0d0a0;padding:5px 9px;vertical-align:top}
-.opt-table tr:nth-child(even) td{background:#fff8f0}
-.opt-label{background:#FDE8C8;font-weight:700;color:#7A4000}
-.opt-comp{background:#1F4E79;color:white;font-weight:700;text-align:center}
-@media(max-width:800px){.citem{grid-template-columns:1fr 1fr}}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SAIS Timetable Engine vNext</title>
+  <style>
+    :root{
+      --bg:#f5f7fb;
+      --card:#ffffff;
+      --ink:#1f2937;
+      --muted:#6b7280;
+      --line:#dbe3ef;
+      --accent:#2952cc;
+      --accent-2:#0f766e;
+      --warn:#92400e;
+      --soft:#eef3ff;
+      --chip:#eef2f7;
+      --danger:#b91c1c;
+      --shadow:0 10px 25px rgba(15,23,42,.08);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter,Segoe UI,Arial,sans-serif;
+      color:var(--ink);
+      background:linear-gradient(180deg,#eef3ff 0%, var(--bg) 140px);
+    }
+    .wrap{max-width:1460px;margin:0 auto;padding:22px}
+    .hero{
+      background:linear-gradient(135deg,#17337a 0%,#2952cc 55%,#4f7cff 100%);
+      color:#fff;border-radius:26px;padding:24px 26px;box-shadow:var(--shadow);
+      display:grid;grid-template-columns:1.3fr .9fr;gap:18px;align-items:start;
+    }
+    .hero h1{margin:0 0 8px;font-size:32px}
+    .hero p{margin:0;color:rgba(255,255,255,.9);line-height:1.45}
+    .pillbar{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+    .pill{
+      padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.15);
+      border:1px solid rgba(255,255,255,.18);font-size:13px
+    }
+    .status-card{
+      background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);
+      border-radius:20px;padding:16px 18px;
+    }
+    .status-card h3{margin:0 0 10px;font-size:16px}
+    .status-card ul{margin:0;padding-left:18px;line-height:1.45}
+    .toolbar{
+      display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 14px;
+    }
+    button, select, input, textarea{
+      font:inherit;
+    }
+    .btn{
+      border:0;border-radius:12px;padding:11px 14px;background:var(--accent);color:#fff;
+      cursor:pointer;box-shadow:var(--shadow)
+    }
+    .btn.secondary{background:#fff;color:var(--ink);border:1px solid var(--line);box-shadow:none}
+    .btn.ghost{background:var(--soft);color:var(--accent);box-shadow:none}
+    .tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+    .tab{
+      padding:12px 16px;border-radius:14px;background:#fff;border:1px solid var(--line);
+      cursor:pointer;font-weight:600;
+    }
+    .tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+    .panel{display:none}
+    .panel.active{display:block}
+    .grid{display:grid;gap:16px}
+    .grid.two{grid-template-columns:1.1fr .9fr}
+    .grid.three{grid-template-columns:1.2fr .8fr .8fr}
+    .card{
+      background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+      padding:18px;box-shadow:var(--shadow)
+    }
+    .card h2,.card h3{margin:0 0 12px}
+    .subtle{color:var(--muted);font-size:14px}
+    .controls-row{
+      display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px
+    }
+    .controls-row label{font-size:14px;color:var(--muted)}
+    .select, .input, .textarea{
+      border:1px solid var(--line);border-radius:12px;background:#fff;padding:10px 12px;
+      min-width:120px
+    }
+    .textarea{min-height:90px;width:100%}
+    table{width:100%;border-collapse:collapse}
+    .tt th,.tt td{
+      border:1px solid var(--line);padding:8px;vertical-align:top
+    }
+    .tt th{
+      background:#f8fafc;text-align:center;font-size:13px
+    }
+    .slot{
+      min-height:88px;background:#fff;border-radius:10px;padding:8px;cursor:pointer;
+      transition:.15s ease;border:1px dashed transparent;
+    }
+    .slot:hover{background:#f8fbff;border-color:#b7c7ee}
+    .slot .subject{font-weight:700;font-size:14px}
+    .slot .meta{margin-top:5px;font-size:12px;color:var(--muted);line-height:1.35}
+    .slot.empty .subject{color:#c0c7d2}
+    .badge{
+      display:inline-block;padding:4px 8px;border-radius:999px;background:var(--chip);
+      font-size:12px;margin:2px 5px 0 0
+    }
+    .badge.primary{background:#e8f0ff;color:#2449aa}
+    .badge.success{background:#e8fbf6;color:#0f766e}
+    .badge.warn{background:#fff4df;color:#92400e}
+    .list{display:grid;gap:10px}
+    .row{
+      display:grid;grid-template-columns:170px 1fr;gap:10px;align-items:center
+    }
+    .option-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+    .block{
+      border:1px solid var(--line);border-radius:16px;padding:14px;background:#fff
+    }
+    .block h4{margin:0 0 8px}
+    .block ul{margin:0;padding-left:18px;line-height:1.5}
+    .notice{
+      background:#fff9e8;border:1px solid #f4df9b;color:#7a5a00;border-radius:14px;padding:12px 14px
+    }
+    .tutor-table td,.tutor-table th{border:1px solid var(--line);padding:10px}
+    .tutor-table th{background:#f8fafc}
+    .stack{display:grid;gap:12px}
+    .small{font-size:12px}
+    .legend{display:flex;gap:8px;flex-wrap:wrap}
+    .modal-backdrop{
+      position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;
+      align-items:center;justify-content:center;padding:18px;z-index:20;
+    }
+    .modal-backdrop.show{display:flex}
+    .modal{
+      width:min(760px,96vw);background:#fff;border-radius:24px;padding:20px;border:1px solid var(--line);
+      box-shadow:0 24px 70px rgba(15,23,42,.25)
+    }
+    .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+    .modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .full{grid-column:1 / -1}
+    .footer-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:14px}
+    .rule-list li{margin-bottom:6px}
+    .print-note{font-size:13px;color:var(--muted)}
+    @media (max-width: 980px){
+      .hero,.grid.two,.grid.three{grid-template-columns:1fr}
+      .row{grid-template-columns:1fr}
+      .modal-grid{grid-template-columns:1fr}
+    }
+    @media print{
+      body{background:#fff}
+      .hero,.tabs,.toolbar,.controls-row,.no-print,.modal-backdrop{display:none !important}
+      .card{box-shadow:none;border:none;padding:0}
+      .panel{display:block !important}
+      .panel:not(.print-target){display:none !important}
+    }
+  </style>
 </head>
 <body>
-<header style="position:relative">
-  <img class="logo" src="data:image/jpeg;base64,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" alt="SAIS">
-  <div>
-    <h1>SAIS Timetable &amp; Cover Engine 2026/27</h1>
-    <p>Santo António International School of Estoril &nbsp;·&nbsp; Three Campus Structure &nbsp;·&nbsp; Academic Year 2026/27</p>
-  </div>
-  <span class="badge">Primary Campus III</span>
-  <span class="badge">Secondary Campus</span>
-  <span class="badge">Senior Campus</span>
-</header>
-<div class="tabs">
-  <div class="tab active" onclick="showTab('cover', this)">🔄 Cover Planner</div>
-  <div class="tab" onclick="showTab('timetables', this)">📅 Campus Timetables</div>
-  <div class="tab" onclick="showTab('workload', this)">📊 Staff &amp; Workload</div>
-  <div class="tab" onclick="showTab('options', this)">📚 Options Blocks</div>
-  <div class="tab" onclick="showTab('tutors', this)">🎓 Tutor Assignments</div>
-  <div class="tab" onclick="showTab('copilot', this)">🤖 AI Copilot</div>
-</div>
+  <div class="wrap">
+    <section class="hero">
+      <div>
+        <h1>SAIS Timetable Engine — Build Version</h1>
+        <p>
+          Working build for the next phase: A2–A6 structure loaded, iGCSE option block updated with ICT,
+          editable timetable cells, and two-tutor support for secondary tutor groups. A-level detail is left
+          ready for the later update.
+        </p>
+        <div class="pillbar">
+          <span class="pill">Primary kept separate</span>
+          <span class="pill">Senior stays on 1-hour lesson structure</span>
+          <span class="pill">Popup editor with dropdowns</span>
+          <span class="pill">Local save in browser for this build</span>
+        </div>
+      </div>
+      <div class="status-card">
+        <h3>Loaded rule state</h3>
+        <ul>
+          <li>A2–A4 conditionals added, including Spanish/ICT lockstep and DT/Art alpha-beta split.</li>
+          <li>A5–A6 iGCSE block updated to include ICT alongside DT, CS, Business and Global.</li>
+          <li>Compulsory/core subjects shown inside the options view for KS3 and iGCSE.</li>
+          <li>A-level block area included as placeholder pending later information.</li>
+        </ul>
+      </div>
+    </section>
 
-<!-- PRINT VIEW (hidden until print) -->
-<div id="print-view">
-  <div class="pv-banner">
-    <div class="pv-banner-left">
-      <div class="pv-school">Santo António International School of Estoril</div>
-      <div class="pv-campus" id="pv-campus-label">Campus Timetable</div>
-      <div class="pv-day" id="pv-day-label">Monday</div>
-      <div class="pv-meta" id="pv-meta-label">2026/27</div>
+    <div class="toolbar no-print">
+      <button class="btn" onclick="saveAll()">Save current build state</button>
+      <button class="btn secondary" onclick="resetDemo()">Reset to starter build</button>
+      <button class="btn ghost" onclick="window.print()">Print current timetable view</button>
     </div>
-    <img class="pv-logo" src="data:image/jpeg;base64,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" alt="SAIS">
-  </div>
-  <div id="pv-table-container"></div>
-  <div class="pv-footer">
-    <span>SAIS Timetable Engine 2026/27 — Draft allocation subject to final confirmation</span>
-    <span id="pv-footer-date"></span>
-  </div>
-</div>
 
-<!-- ══ COVER PLANNER ══ -->
-<div class="panel active" id="panel-cover">
-<div class="admin-note">⚠️ <strong>Admin staff (MZ, MS, ATS, ALF, MM, MG)</strong> — not timetabled for lessons, excluded from cover suggestions. <strong>LM</strong> — absent until November 2026, add daily. Cross-campus staff (JS, MB, DV, DPB, IR, MF) can only cover on their assigned campus day.</div>
-<div class="controls">
-  <div class="cg"><label>Campus</label>
-    <select id="sel-campus" onchange="populateAbsent();refreshCover()">
-      <option value="all">All Campuses</option>
-      <option value="Primary">Primary</option>
-      <option value="Secondary">Secondary</option>
-      <option value="Senior">Senior</option>
-    </select>
+    <div class="tabs no-print">
+      <div class="tab active" onclick="showTab('timetables', this)">Campus Timetables</div>
+      <div class="tab" onclick="showTab('options', this)">Options Blocks</div>
+      <div class="tab" onclick="showTab('tutors', this)">Tutor Groups</div>
+      <div class="tab" onclick="showTab('rules', this)">Constraint Notes</div>
+    </div>
+
+    <section id="panel-timetables" class="panel active print-target">
+      <div class="grid two">
+        <div class="card">
+          <div class="controls-row no-print">
+            <label>Section
+              <select id="section-select" class="select" onchange="changeSection()">
+                <option value="secondary">Secondary / Senior</option>
+                <option value="primary">Primary structure placeholder</option>
+              </select>
+            </label>
+            <label>Year Group
+              <select id="year-select" class="select" onchange="renderTimetable()"></select>
+            </label>
+            <label>Week Pattern
+              <select id="week-select" class="select" onchange="renderTimetable()">
+                <option value="standard">Standard week</option>
+                <option value="friday">Friday / altered day view</option>
+              </select>
+            </label>
+          </div>
+          <div class="print-note">Click any timetable cell to open the small editor. This build stores changes in the browser so you can shape the base timetable before the full database-writing version is wired in.</div>
+          <div id="tt-wrap"></div>
+        </div>
+
+        <div class="stack">
+          <div class="card">
+            <h3>Editor approach</h3>
+            <p class="subtle">This build uses the small popup editor model you preferred, rather than filling every cell with permanent dropdowns.</p>
+            <div class="legend">
+              <span class="badge primary">Subject dropdown</span>
+              <span class="badge success">Teacher dropdown</span>
+              <span class="badge warn">Room / notes editable</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Starter build notes</h3>
+            <ul class="rule-list subtle">
+              <li>A2–A4 subjects and staffing loaded from your conditionals.</li>
+              <li>A5–A6 iGCSE block updated with ICT included in the same block timing as DT / CS / Business / Global.</li>
+              <li>A5 RE added as a compulsory line in the options view.</li>
+              <li>A-level block structure is intentionally marked pending, not guessed.</li>
+              <li>Next later step: write timetable slots to Supabase, not just browser storage.</li>
+            </ul>
+          </div>
+
+          <div class="card">
+            <h3>Current year-group subject set</h3>
+            <div id="subjects-summary" class="list subtle"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="panel-options" class="panel">
+      <div class="grid two">
+        <div class="card">
+          <h2>Secondary / Senior Options & Compulsory Structure</h2>
+          <p class="subtle">Compulsory topics are shown alongside blocks so the app can evolve into a full planning view rather than a narrow options-only view.</p>
+          <div id="options-view" class="option-grid"></div>
+        </div>
+        <div class="card">
+          <h2>Primary structure note</h2>
+          <div class="notice">
+            Primary remains on a separate weekly pattern and should not be forced into the A2–A8 secondary block model. This build keeps that separation explicit while the secondary backbone is being shaped.
+          </div>
+          <div style="margin-top:14px">
+            <h3>Pending later additions</h3>
+            <ul class="rule-list subtle">
+              <li>A-level compulsory and option lines once your colleague sends them.</li>
+              <li>Room allocations after the base teaching timetable is locked.</li>
+              <li>Daily override layer for temporary moves and cover adjustments.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="panel-tutors" class="panel">
+      <div class="grid two">
+        <div class="card">
+          <h2>Tutor Groups</h2>
+          <p class="subtle">Secondary groups now have two tutor dropdowns. Primary remains a single tutor entry.</p>
+          <div id="tutor-wrap"></div>
+          <div class="footer-actions no-print">
+            <button class="btn" onclick="saveTutors()">Save tutor assignments</button>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Tutor model</h2>
+          <div class="list subtle">
+            <div><strong>Primary:</strong> one tutor slot per group</div>
+            <div><strong>A2–A8:</strong> two tutor slots per group</div>
+            <div><strong>Later step:</strong> connect this tab fully to the same live store as the timetable cells</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="panel-rules" class="panel">
+      <div class="grid two">
+        <div class="card">
+          <h2>Loaded non-negotiables in this build</h2>
+          <ul class="rule-list subtle">
+            <li>A2–A4 Spanish and ICT are blocked together; ICT runs as one double for alpha and one double for beta against Spanish.</li>
+            <li>A3 and A4 Maths and Science are intended to line up, with doubles preferred.</li>
+            <li>A2–A4 DT and Art run simultaneously by alpha / beta; PE is two doubles weekly.</li>
+            <li>A5–A6 iGCSE block with DT / Computer Science / ICT / Business Studies / Global Perspectives runs as one aligned block.</li>
+            <li>A5–A6 languages stay together; History and Geography stay together by year-group pairing; Science remains three doubles; English remains 2 singles + 1 double.</li>
+            <li>A-level details intentionally not guessed yet.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h2>What this build is for</h2>
+          <p class="subtle">
+            This is the “start to build” version: enough structure to let you begin shaping the timetable in-app,
+            test the editing model, and prepare for the fully database-driven version once the remaining A-level
+            and rooming constraints arrive.
+          </p>
+        </div>
+      </div>
+    </section>
   </div>
-  <div class="cg"><label>Day</label>
-    <select id="sel-day" onchange="populateAbsent();refreshCover()">
-      <option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option>
-    </select>
-  </div>
-  <div class="cg"><label>Add Absent Teacher</label>
-    <div style="display:flex;gap:6px">
-      <select id="sel-absent"><option value="">— select —</option></select>
-      <button class="btn btn-red" onclick="addAbsent()">+ Add</button>
+
+  <div id="editor-backdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-head">
+        <div>
+          <h3 style="margin:0">Edit timetable slot</h3>
+          <div id="editor-context" class="subtle"></div>
+        </div>
+        <button class="btn secondary" onclick="closeEditor()">Close</button>
+      </div>
+      <div class="modal-grid">
+        <div>
+          <label class="subtle">Subject</label>
+          <select id="edit-subject" class="select" style="width:100%"></select>
+        </div>
+        <div>
+          <label class="subtle">Teacher</label>
+          <select id="edit-teacher" class="select" style="width:100%"></select>
+        </div>
+        <div>
+          <label class="subtle">Room</label>
+          <input id="edit-room" class="input" style="width:100%" placeholder="Optional for now" />
+        </div>
+        <div>
+          <label class="subtle">Block / grouping note</label>
+          <input id="edit-block" class="input" style="width:100%" placeholder="e.g. Option 2 beta, core, alpha" />
+        </div>
+        <div class="full">
+          <label class="subtle">Notes</label>
+          <textarea id="edit-notes" class="textarea" placeholder="Any local reasoning, pairing note, or temporary comment"></textarea>
+        </div>
+      </div>
+      <div class="footer-actions">
+        <button class="btn secondary" onclick="clearCurrentCell()">Clear slot</button>
+        <button class="btn" onclick="saveCurrentCell()">Save slot</button>
+      </div>
     </div>
   </div>
-  <div class="cg" style="flex:1"><label>Absent Today</label>
-    <div class="absent-tags" id="absent-tags"><span style="color:#bbb;font-size:11px">None</span></div>
-  </div>
-  <div class="cg"><label>&nbsp;</label>
-    <div style="display:flex;gap:6px">
-      <button class="btn btn-grey" onclick="clearAbsent()">Clear All</button>
-      <button class="btn btn-green" id="print-cover-btn" onclick="printCoverSheet()" style="display:none">🖨️ Print</button>
-    </div>
-  </div>
-</div>
-<div class="stats-bar" id="cover-stats" style="display:none"></div>
-<div id="cover-grid"><div class="no-r">👆 Add absent teachers to generate cover suggestions</div></div>
-</div>
 
-<!-- ══ TIMETABLES ══ -->
-<div class="panel" id="panel-timetables">
-<div class="controls">
-  <div class="cg"><label>Campus</label>
-    <select id="tt-campus" onchange="initTT()">
-      <option value="Primary">Primary Campus (KG–A1)</option>
-      <option value="Secondary">Secondary Campus (A2–A6)</option>
-      <option value="Senior">Senior Campus (A7–A8)</option>
-    </select>
-  </div>
-  <div class="cg"><label>&nbsp;</label>
-    <button class="btn btn-gold" onclick="printTT()">🖨️ Print A3</button>
-  </div>
-</div>
-<div class="day-tabs" id="day-tabs">
-  <div class="day-tab active" onclick="selectDay('Monday',this)">Monday</div>
-  <div class="day-tab" onclick="selectDay('Tuesday',this)">Tuesday</div>
-  <div class="day-tab" onclick="selectDay('Wednesday',this)">Wednesday</div>
-  <div class="day-tab" onclick="selectDay('Thursday',this)">Thursday</div>
-  <div class="day-tab" onclick="selectDay('Friday',this)">Friday</div>
-</div>
-<div id="tt-table-wrap" style="overflow-x:auto;background:white;border-radius:0 10px 10px 10px;padding:12px;box-shadow:0 2px 8px rgba(0,0,0,.07)">
-  <div class="no-r">Loading timetable...</div>
-</div>
-</div>
+  <script>
+    const DAYS = ['Mon','Tue','Wed','Thu','Fri'];
+    const PERIODS = [1,2,3,4,5,6,7,8,9,10];
 
-<!-- ══ WORKLOAD ══ -->
-<div class="panel" id="panel-workload">
-<div class="controls">
-  <div class="cg"><label>Filter Campus</label>
-    <select id="wl-campus" onchange="renderWorkload()">
-      <option value="all">All Staff</option>
-      <option value="Primary">Primary</option>
-      <option value="Secondary">Secondary</option>
-      <option value="Senior">Senior</option>
-      <option value="Cross">Cross-Campus</option>
-    </select>
-  </div>
-</div>
-<div class="gap-bar">🚨 <strong>Known gaps:</strong> Art–Primary (no teacher) · Music iGCSE A5-A6 (MID days TBC) · Humanities (NW overloaded across A2–A8) · LM absent Sep–Oct 2026 · MT and JA subjects TBC</div>
-<div class="admin-note">📋 Max loads: Senior 21/30 · Secondary &amp; Upper Primary 28/40 · Lower Primary 24/35. Part-time staff only in school when teaching — no free periods counted.</div>
-<div id="workload-container"></div>
-</div>
+    const STAFF = [
+      'AB','AOC','CF','CP','CV','DV','ES','FA','FPV','IR','JS','JR','MID','MK','ML','MNS','MO','MB',
+      'NJW','NS','NW','PK','PM','QV','RL','SA','SVA','TS','TBA','VF','WL','XP'
+    ].sort();
 
-<!-- ══ OPTIONS ══ -->
-<div class="panel" id="panel-options">
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
-<div style="background:white;border-radius:10px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.07)">
-  <div style="font-weight:700;font-size:13px;color:#1F4E79;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #E8841A">iGCSE Options — A5 &amp; A6</div>
-  <table class="opt-table">
-    <tr><th>Option</th><th>Subject 1</th><th>Subject 2</th><th>Subject 3</th><th>Subject 4</th></tr>
-    <tr><td class="opt-label">Option 1<br><small>Languages</small></td><td>French (G1)</td><td>Spanish (G1)</td><td>English Lit (G2)</td><td>Mandarin (G1)</td></tr>
-    <tr><td class="opt-label">Option 2<br><small>Humanities</small></td><td>History (G2)</td><td>Geography (G2)</td><td></td><td></td></tr>
-    <tr><td class="opt-label">Option 3<br><small>Business/GP</small></td><td>Business Studies (G5)</td><td>Global Perspectives (G5)</td><td></td><td></td></tr>
-    <tr><td class="opt-label">Option 4<br><small>Tech</small></td><td>Design &amp; Technology (G5)</td><td>Computer Science (G5)</td><td></td><td></td></tr>
-    <tr><td class="opt-label">Option 5<br><small>Creative</small></td><td>Art &amp; Design (G3)</td><td>Physical Education (G5)</td><td>Music (G5)*</td><td></td></tr>
-    <tr><td colspan="5" style="background:#FFF8E1;font-size:11px;padding:5px 9px">★ <strong>Additional Mathematics</strong> — runs simultaneously with Extended Maths. Extended Maths students only.</td></tr>
-    <tr><td colspan="5" class="opt-comp">COMPULSORY: English · Portuguese · Mathematics (Extended &amp; Additional) · Co-ordinated Sciences · PE (non-exam) · RE (A5 only)</td></tr>
-  </table>
-  <p style="font-size:10px;color:#888;margin-top:5px">* Music subject to MID days confirmation</p>
-</div>
-<div style="background:white;border-radius:10px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.07)">
-  <div style="font-weight:700;font-size:13px;color:#1F4E79;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #E8841A">A Level / AICE Diploma — A7 &amp; A8</div>
-  <table class="opt-table">
-    <tr><th>Option</th><th>Subj 1</th><th>Subj 2</th><th>Subj 3</th><th>Subj 4</th><th>Subj 5</th></tr>
-    <tr><td class="opt-label">Option 1</td><td>History (G3)</td><td>Mathematics (G1)</td><td>Media Studies (G3)</td><td>Psychology (G3)</td><td></td></tr>
-    <tr><td class="opt-label">Option 2</td><td>Biology (G1)</td><td>Business (G3)</td><td>D&amp;T (G1)</td><td>Physics (G1)</td><td></td></tr>
-    <tr><td class="opt-label">Option 3</td><td>Chemistry (G1)</td><td>Computer Science (G1)</td><td>IT (G1)</td><td>Portuguese II AS (G2)</td><td></td></tr>
-    <tr><td class="opt-label">Option 4<br><small>Languages</small></td><td>English AS (G2)</td><td>French (G2)</td><td>Mandarin (G2)</td><td>Portuguese (G2)</td><td>Spanish (G2)</td></tr>
-    <tr><td class="opt-label">Option 5</td><td>Art &amp; Design (G3)</td><td>Marine Science (G1)</td><td>PE AS (G1/3)</td><td>Travel &amp; Tourism AS (G3)</td><td></td></tr>
-    <tr><td colspan="6" class="opt-comp">COMPULSORY: Environmental Management (WL &amp; PM, α/β split) · Global Perspectives AS (SVA, both groups)</td></tr>
-  </table>
-  <p style="font-size:10px;color:#888;margin-top:5px">Students select 4 subjects (1 from each group + 1 extra), skipping one block. Options evening: Tue 28 April 2026.</p>
-</div>
-</div>
-</div>
+    const YEAR_CONFIG = {
+      primary: {
+        groups: ['Nursery','Reception','P1','P2','P3','P4','P5','A1'],
+        singleTutor: true
+      },
+      secondary: {
+        groups: ['A2','A3','A4','A5','A6'],
+        singleTutor: false
+      }
+    };
 
-<!-- ══ TUTORS ══ -->
-<div class="panel" id="panel-tutors">
-<div class="admin-note">👤 Assign a form tutor to each year group. Tutors are responsible for form period, registration and pastoral oversight. Use the AI Copilot to make assignments by voice: "assign RL as tutor for A2"</div>
-<div class="tutor-grid" id="tutor-grid"></div>
-<div style="margin-top:12px;text-align:right">
-  <button class="btn btn-green" onclick="saveTutors()">💾 Save Assignments</button>
-  <button class="btn btn-grey" onclick="resetTutors()" style="margin-left:8px">Reset All</button>
-</div>
-</div>
+    const SUBJECTS = {
+      A2: ['English','Maths','Science','Geography','History','Global Perspectives','Music & Performing Arts','RE','ICT alpha','ICT beta','Portuguese 1st','Portuguese 2nd','Spanish alpha','Spanish beta','PE','DT alpha','DT beta','Art alpha','Art beta','PSHE'],
+      A3: ['English','Maths','Science','Geography','History','Global Perspectives','Music & Performing Arts','RE','ICT alpha','ICT beta','Portuguese 1st','Portuguese 2nd','Spanish alpha','Spanish beta','PE','DT alpha','DT beta','Art alpha','Art beta','PSHE'],
+      A4: ['English','Maths','Science','Geography','History','Global Perspectives','Music & Performing Arts','RE','ICT alpha','ICT beta','Portuguese 1st','Portuguese 2nd','Spanish alpha','Spanish beta','PE','DT alpha','DT beta','Art alpha','Art beta','PSHE'],
+      A5: ['English','RE','Science','History','Geography','French','Spanish','English Literature','Mandarin','Business Studies','Global Perspectives','DT','Computer Science','ICT','Art & Design','PE Option','Music','Additional Maths','Extended Maths'],
+      A6: ['English','Science','History','Geography','French','Spanish','English Literature','Mandarin','Business Studies','Global Perspectives','DT','Computer Science','ICT','Art & Design','PE Option','Music','Additional Maths','Extended Maths']
+    };
 
-<!-- ══ COPILOT ══ -->
-<div class="panel" id="panel-copilot">
-<div class="admin-note">
-  🤖 <strong>SAIS AI Copilot</strong> — connected through your secure backend. No browser API key needed once this is deployed on Vercel.
-</div>
-<div class="copilot-wrap">
-  <div class="chat-history" id="chat-history">
-    <div class="msg msg-ai"><strong>SAIS Copilot 2026/27 ready.</strong><br><br>I know all staff, three campuses, iGCSE and A Level options, workload limits and all timetabling rules. Try asking:<br>• "What is NW's teaching load this year?"<br>• "Who can cover A5 Geography on Wednesday?"<br>• "Assign LB as tutor for P5"<br>• "What are the risks if MID doesn't expand their days?"<br>• "Show me all cross-campus staff rules"</div>
-  </div>
-  <div class="chat-input-row">
-    <input type="text" id="chat-input" placeholder="Ask anything about the 2026/27 timetable..." onkeydown="if(event.key==='Enter')sendMsg()">
-    <button class="btn btn-blue" onclick="sendMsg()">Send ↗</button>
-    <button class="btn btn-grey" onclick="clearChat()">Clear</button>
-  </div>
-</div>
-</div>
-<script>
-// SAIS 2026/27 Engine
+    const TEACHER_BY_SUBJECT = {
+      'English': ['QV','NS'],
+      'Maths': ['CF','MO','PK','CP'],
+      'Science': ['CF','TBA'],
+      'Geography': ['NW','AOC'],
+      'History': ['NW','WL'],
+      'Global Perspectives': ['QV','NW'],
+      'Music & Performing Arts': ['MID'],
+      'RE': ['NS'],
+      'ICT alpha': ['JS'],
+      'ICT beta': ['JS'],
+      'Portuguese 1st': ['RL'],
+      'Portuguese 2nd': ['SA'],
+      'Spanish alpha': ['XP'],
+      'Spanish beta': ['XP'],
+      'PE': ['FA','DV'],
+      'DT alpha': ['NJW','FPV'],
+      'DT beta': ['NJW','FPV'],
+      'Art alpha': ['IR'],
+      'Art beta': ['IR'],
+      'PSHE': STAFF,
+      'French': ['AB'],
+      'Spanish': ['XP'],
+      'English Literature': ['ES'],
+      'Mandarin': ['ML'],
+      'Business Studies': ['CV','MK'],
+      'DT': ['MB','NJW','FPV'],
+      'Computer Science': ['VF'],
+      'ICT': ['JS'],
+      'Art & Design': ['QV'],
+      'PE Option': ['DV'],
+      'Music': ['MID'],
+      'Additional Maths': ['PK','MO'],
+      'Extended Maths': ['CP','PK']
+    };
 
-const TT_DATA = {
-  Primary:   {"Monday": {"KG": {"P1": {"s": "Reading", "t": "AMA", "r": ""}, "P2": {"s": "Literacy", "t": "AMA", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "Numeracy", "t": "AMA", "r": ""}, "LCH": {"s": "LUNCH", "t": "", "r": ""}, "P5": {"s": "Nap I", "t": "AMA", "r": ""}, "P6": {"s": "Nap II", "t": "AMA", "r": ""}, "P7": {"s": "Activities", "t": "AMA", "r": ""}, "P8": {"s": "Activities", "t": "AMA", "r": ""}, "EXT": {"s": "German", "t": "JR", "r": ""}}, "P1": {"P1": {"s": "English", "t": "FR", "r": ""}, "P2": {"s": "ICT", "t": "VV", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "Science", "t": "VV", "r": ""}, "LCH": {"s": "LUNCH", "t": "", "r": ""}, "P5": {"s": "Art & Craft", "t": "IR", "r": ""}, "P6": {"s": "Music & PA", "t": "CS", "r": ""}, "P7": {"s": "Portuguese", "t": "JR", "r": ""}, "P8": {"s": "PE", "t": "BS", "r": ""}, "EXT": {"s": "", "t": "", "r": ""}}, "P2": {"P1": {"s": "Science", "t": "VV", "r": ""}, "P2": {"s": "ICT", "t": "VV", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "Maths", "t": "LB", "r": ""}, "LCH": {"s": "LUNCH", "t": "", "r": ""}, "P5": {"s": "Art & Craft", "t": "IR", "r": ""}, "P6": {"s": "Music & PA", "t": "MF", "r": ""}, "P7": {"s": "English", "t": "LB", "r": ""}, "P8": {"s": "PE", "t": "BS", "r": ""}, "EXT": {"s": "", "t": "", "r": ""}}, "P3": {"P1": {"s": "Portuguese", "t": "JR", "r": ""}, "P2": {"s": "Art & Design", "t": "IR", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "ICT", "t": "VV", "r": ""}, "LCH": {"s": "LUNCH", "t": "", "r": ""}, "P5": {"s": "English", "t": "LB", "r": ""}, "P6": {"s": "Maths", "t": "LB", "r": ""}, "P7": {"s": "Science", "t": "VV", "r": ""}, "P8": {"s": "Music & PA", "t": "MF", "r": ""}, "EXT": {"s": "", "t": "", "r": ""}}, "P4": {"P1": {"s": "Maths", "t": "JR", "r": ""}, "P2": {"s": "Science", "t": "VV", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "English", "t": "LB", "r": ""}, "LCH": {"s": "LUNCH", "t": "", "r": ""}, "P5": {"s": "Portuguese", "t": "JR", "r": ""}, "P6": {"s": "History", "t": "VV", "r": ""}, "P7": {"s": "Music & PA", "t": "MF", "r": ""}, "P8": {"s": "Art & Design", "t": "IR", "r": ""}, "EXT": {"s": "", "t": "", "r": ""}}, "P5": {"P1": {"s": "English", "t": "LB", "r": ""}, "P2": {"s": "Portuguese", "t": "JR", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "Art & Design", "t": "IR", "r": ""}, "LCH": {"s": "LUNCH", "t": "", "r": ""}, "P5": {"s": "History", "t": "VV", "r": ""}, "P6": {"s": "PE", "t": "BS", "r": ""}, "P7": {"s": "PE", "t": "BS", "r": ""}, "P8": {"s": "Science", "t": "VV", "r": ""}, "EXT": {"s": "", "t": "", "r": ""}}, "A1": {"P1": {"s": "Maths", "t": "LB", "r": ""}, "P2": {"s": "History", "t": "VV", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "Science", "t": "VV", "r": ""}, "P4": {"s": "Science", "t": "VV", "r": ""}, "LCA": {"s": "LUNCH", "t": "", "r": ""}, "P6": {"s": "Art | DT", "t": "IR", "r": ""}, "P7": {"s": "Art | DT", "t": "IR", "r": ""}, "P8": {"s": "English", "t": "LB", "r": ""}, "EXT": {"s": "Portuguese", "t": "JR", "r": ""}}}, "Tuesday": {"KG": {"P1": {"s": "Reading", "t": "AMA", "r": ""}, "P2": {"s": "Topic", "t": "AMA", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "World", "t": "AMA", "r": ""}, "LCH": {"s": "LUNCH", "t": "", "r": ""}, "P5": {"s": "Nap I", "t": "AMA", "r": ""}, "P6": {"s": "Nap II", "t": "AMA", "r": ""}, "P7": {"s": "PE", "t": "BS", "r": ""}, "P8": {"s": "Yoga", "t": "AMA", "r": ""}, "EXT": {"s": "", "t": "", "r": ""}}, "P1": {"P1": {"s": "English", "t": "FR", "r": ""}, "P2": {"s": "Maths", "t": "LB", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "PE", "t": "BS", "r": ""}, "LCH": {"s": "LUNCH", "t": "", "r": ""}, "P5": {"s": "Reading", "t": "FR", "r": ""}, "P6": {"s": "Und. World", "t": "VV", "r": ""}, "P7": {"s": "Music & PA", "t": "CS", "r": ""}, "P8": {"s": "Golden Time", "t": "LB", "r": ""}, "EXT": {"s": "Foreign Lang.", "t": "JR", "r": ""}}, "P2": {"P1": {"s": "History", "t": "VV", "r": ""}, "P2": {"s": "Portuguese", "t": "JR", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "PE", "t": "BS", "r": ""}, "LCH": {"s": "LUNCH", "t": "", "r": ""}, "P5": {"s": "Maths", "t": "JR", "r": ""}, "P6": {"s": "Science", "t": "VV", "r": ""}, "P7": {"s": "Music & PA", "t": "MF", "r": ""}, "P8": {"s": "Reading", "t": "LB", "r": ""}, "EXT": {"s": "Foreign Lang.", "t": "JR", "r": ""}}, "P3": {"P1": {"s": "English", "t": "LB", "r": ""}, "P2": {"s": "History", "t": "VV", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "Maths", "t": "JR", "r": ""}, "LCH": {"s": "LUNCH", "t": "", "r": ""}, "P5": {"s": "Geography", "t": "VV", "r": ""}, "P6": {"s": "PE", "t": "BS", "r": ""}, "P7": {"s": "PE", "t": "BS", "r": ""}, "P8": {"s": "Music & PA", "t": "MF", "r": ""}, "EXT": {"s": "Foreign Lang.", "t": "JR", "r": ""}}, "P4": {"P1": {"s": "Portuguese", "t": "JR", "r": ""}, "P2": {"s": "Maths", "t": "JR", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "English", "t": "LB", "r": ""}, "LCH": {"s": "LUNCH", "t": "", "r": ""}, "P5": {"s": "Music & PA", "t": "MF", "r": ""}, "P6": {"s": "PE", "t": "BS", "r": ""}, "P7": {"s": "PE", "t": "BS", "r": ""}, "P8": {"s": "Geography", "t": "VV", "r": ""}, "EXT": {"s": "Foreign Lang.", "t": "JR", "r": ""}}, "P5": {"P1": {"s": "Science", "t": "VV", "r": ""}, "P2": {"s": "ICT", "t": "VV", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "Geography", "t": "VV", "r": ""}, "LCH": {"s": "LUNCH", "t": "", "r": ""}, "P5": {"s": "Design & Tech.", "t": "LB", "r": ""}, "P6": {"s": "Maths", "t": "JR", "r": ""}, "P7": {"s": "Maths", "t": "JR", "r": ""}, "P8": {"s": "Music & PA", "t": "CS", "r": ""}, "EXT": {"s": "Foreign Lang.", "t": "JR", "r": ""}}, "A1": {"P1": {"s": "English", "t": "LB", "r": ""}, "P2": {"s": "English", "t": "LB", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "ICT", "t": "VV", "r": ""}, "P4": {"s": "ICT", "t": "VV", "r": ""}, "LCA": {"s": "LUNCH", "t": "", "r": ""}, "P6": {"s": "Maths", "t": "LB", "r": ""}, "P7": {"s": "Religious Ed.", "t": "LB", "r": ""}, "P8": {"s": "Portuguese", "t": "JR", "r": ""}, "EXT": {"s": "Global Persp.", "t": "VV", "r": ""}}}, "Wednesday": {"KG": {"P1": {"s": "Reading", "t": "AMA", "r": ""}, "P2": {"s": "Numeracy", "t": "AMA", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "Literacy", "t": "AMA", "r": ""}, "LCH": {"s": "LUNCH", "t": "", "r": ""}, "P5": {"s": "Nap I", "t": "AMA", "r": ""}, "P6": {"s": "Nap II", "t": "AMA", "r": ""}, "P7": {"s": "Activities", "t": "AMA", "r": ""}, "P8": {"s": "Activities", "t": "AMA", "r": ""}, "EXT": {"s": "German", "t": "JR", "r": ""}}, "P1": {"P1": {"s": "Portuguese", "t": "JR", "r": ""}, "P2": {"s": "English", "t": "FR", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "Maths", "t": "LB", "r": ""}, "LCH": {"s": "LUNCH", "t": "", "r": ""}, "P5": {"s": "Art & Craft", "t": "IR", "r": ""}, "P6": {"s": "ICT", "t": "VV", "r": ""}, "P7": {"s": "PE", "t": "BS", "r": ""}, "P8": {"s": "Story Time", "t": "FR", "r": ""}, "EXT": {"s": "", "t": "", "r": ""}}, "P2": {"P1": {"s": "English", "t": "LB", "r": ""}, "P2": {"s": "Maths", "t": "JR", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "Tutor Time", "t": "LB", "r": ""}, "LCH": {"s": "LUNCH", "t": "", "r": ""}, "P5": {"s": "Art & Craft", "t": "IR", "r": ""}, "P6": {"s": "Portuguese", "t": "JR", "r": ""}, "P7": {"s": "PE", "t": "BS", "r": ""}, "P8": {"s": "ICT", "t": "VV", "r": ""}, "EXT": {"s": "", "t": "", "r": ""}}, "P3": {"P1": {"s": "Mental Maths", "t": "JR", "r": ""}, "P2": {"s": "ICT", "t": "VV", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "Art & Design", "t": "IR", "r": ""}, "LCH": {"s": "LUNCH", "t": "", "r": ""}, "P5": {"s": "English", "t": "LB", "r": ""}, "P6": {"s": "Science", "t": "VV", "r": ""}, "P7": {"s": "Religious Ed.", "t": "LB", "r": ""}, "P8": {"s": "Portuguese", "t": "JR", "r": ""}, "EXT": {"s": "", "t": "", "r": ""}}, "P4": {"P1": {"s": "ICT", "t": "VV", "r": ""}, "P2": {"s": "Mental Maths", "t": "JR", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "English", "t": "LB", "r": ""}, "LCH": {"s": "LUNCH", "t": "", "r": ""}, "P5": {"s": "Science", "t": "VV", "r": ""}, "P6": {"s": "Religious Ed.", "t": "LB", "r": ""}, "P7": {"s": "Tutor Time", "t": "LB", "r": ""}, "P8": {"s": "Art & Design", "t": "IR", "r": ""}, "EXT": {"s": "", "t": "", "r": ""}}, "P5": {"P1": {"s": "English", "t": "LB", "r": ""}, "P2": {"s": "English", "t": "LB", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "Science", "t": "VV", "r": ""}, "LCH": {"s": "LUNCH", "t": "", "r": ""}, "P5": {"s": "Maths", "t": "JR", "r": ""}, "P6": {"s": "Global P.", "t": "VV", "r": ""}, "P7": {"s": "Art & Design", "t": "IR", "r": ""}, "P8": {"s": "Music & PA", "t": "CS", "r": ""}, "EXT": {"s": "", "t": "", "r": ""}}, "A1": {"P1": {"s": "Science", "t": "VV", "r": ""}, "P2": {"s": "Geography", "t": "VV", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "PE", "t": "BS", "r": ""}, "P4": {"s": "PE", "t": "BS", "r": ""}, "LCA": {"s": "LUNCH", "t": "", "r": ""}, "P6": {"s": "Maths", "t": "LB", "r": ""}, "P7": {"s": "Maths", "t": "LB", "r": ""}, "P8": {"s": "English", "t": "LB", "r": ""}, "EXT": {"s": "Music & PA", "t": "CS", "r": ""}}}, "Thursday": {"KG": {"P1": {"s": "Reading", "t": "AMA", "r": ""}, "P2": {"s": "Topic", "t": "AMA", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "World", "t": "AMA", "r": ""}, "LCH": {"s": "LUNCH", "t": "", "r": ""}, "P5": {"s": "Nap I", "t": "AMA", "r": ""}, "P6": {"s": "Nap II", "t": "AMA", "r": ""}, "P7": {"s": "PE", "t": "BS", "r": ""}, "P8": {"s": "Yoga", "t": "AMA", "r": ""}, "EXT": {"s": "", "t": "", "r": ""}}, "P1": {"P1": {"s": "Science", "t": "VV", "r": ""}, "P2": {"s": "Maths", "t": "LB", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "Music & PA", "t": "MF", "r": ""}, "LCH": {"s": "LUNCH", "t": "", "r": ""}, "P5": {"s": "Reading", "t": "FR", "r": ""}, "P6": {"s": "Art & Craft", "t": "IR", "r": ""}, "P7": {"s": "Portuguese", "t": "JR", "r": ""}, "P8": {"s": "PE", "t": "BS", "r": ""}, "EXT": {"s": "Foreign Lang.", "t": "JR", "r": ""}}, "P2": {"P1": {"s": "English", "t": "LB", "r": ""}, "P2": {"s": "Science", "t": "VV", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "Music & PA", "t": "MF", "r": ""}, "LCH": {"s": "LUNCH", "t": "", "r": ""}, "P5": {"s": "Maths", "t": "JR", "r": ""}, "P6": {"s": "Art & Craft", "t": "IR", "r": ""}, "P7": {"s": "LEGO", "t": "VV", "r": ""}, "P8": {"s": "PE", "t": "BS", "r": ""}, "EXT": {"s": "Foreign Lang.", "t": "JR", "r": ""}}, "P3": {"P1": {"s": "English", "t": "LB", "r": ""}, "P2": {"s": "Portuguese", "t": "JR", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "LEGO", "t": "VV", "r": ""}, "LCH": {"s": "LUNCH", "t": "", "r": ""}, "P5": {"s": "Geography", "t": "VV", "r": ""}, "P6": {"s": "History", "t": "VV", "r": ""}, "P7": {"s": "Mental Maths", "t": "JR", "r": ""}, "P8": {"s": "Music & PA", "t": "MF", "r": ""}, "EXT": {"s": "Foreign Lang.", "t": "JR", "r": ""}}, "P4": {"P1": {"s": "Portuguese", "t": "JR", "r": ""}, "P2": {"s": "Maths", "t": "JR", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "History", "t": "VV", "r": ""}, "LCH": {"s": "LUNCH", "t": "", "r": ""}, "P5": {"s": "Art & Design", "t": "IR", "r": ""}, "P6": {"s": "English", "t": "LB", "r": ""}, "P7": {"s": "Music & PA", "t": "MF", "r": ""}, "P8": {"s": "ICT", "t": "VV", "r": ""}, "EXT": {"s": "Foreign Lang.", "t": "JR", "r": ""}}, "P5": {"P1": {"s": "Maths", "t": "JR", "r": ""}, "P2": {"s": "Religious Ed.", "t": "LB", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "Portuguese", "t": "JR", "r": ""}, "LCH": {"s": "LUNCH", "t": "", "r": ""}, "P5": {"s": "English", "t": "LB", "r": ""}, "P6": {"s": "PE", "t": "BS", "r": ""}, "P7": {"s": "PE", "t": "BS", "r": ""}, "P8": {"s": "Reading", "t": "LB", "r": ""}, "EXT": {"s": "Foreign Lang.", "t": "JR", "r": ""}}, "A1": {"P1": {"s": "Science", "t": "VV", "r": ""}, "P2": {"s": "Maths", "t": "LB", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "Art | DT", "t": "IR", "r": ""}, "P4": {"s": "Art | DT", "t": "IR", "r": ""}, "LCA": {"s": "LUNCH", "t": "", "r": ""}, "P6": {"s": "English", "t": "LB", "r": ""}, "P7": {"s": "English", "t": "LB", "r": ""}, "P8": {"s": "PT Reading", "t": "LB", "r": ""}, "EXT": {"s": "PSHE", "t": "LB", "r": ""}}}, "Friday": {"KG": {"P1": {"s": "Reading", "t": "AMA", "r": ""}, "P2": {"s": "Literacy", "t": "AMA", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "Numeracy", "t": "AMA", "r": ""}, "LCH": {"s": "LUNCH", "t": "", "r": ""}, "P5": {"s": "Activities", "t": "AMA", "r": ""}, "P6": {"s": "Activities", "t": "AMA", "r": ""}, "P7": {"s": "Activities", "t": "AMA", "r": ""}, "P8": {"s": "Activities", "t": "AMA", "r": ""}, "EXT": {"s": "German", "t": "JR", "r": ""}}, "P1": {"P1": {"s": "English", "t": "FR", "r": ""}, "P2": {"s": "Maths", "t": "LB", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "PE", "t": "BS", "r": ""}, "LCH": {"s": "LUNCH", "t": "", "r": ""}, "P5": {"s": "Art & Craft", "t": "IR", "r": ""}, "P6": {"s": "Und. World", "t": "VV", "r": ""}, "P7": {"s": "Religious Ed.", "t": "LB", "r": ""}, "P8": {"s": "LEGO", "t": "VV", "r": ""}, "EXT": {"s": "", "t": "", "r": ""}}, "P2": {"P1": {"s": "Maths", "t": "JR", "r": ""}, "P2": {"s": "Portuguese", "t": "JR", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "PE", "t": "BS", "r": ""}, "LCH": {"s": "LUNCH", "t": "", "r": ""}, "P5": {"s": "Art & Craft", "t": "IR", "r": ""}, "P6": {"s": "Geography", "t": "VV", "r": ""}, "P7": {"s": "Religious Ed.", "t": "LB", "r": ""}, "P8": {"s": "Science", "t": "VV", "r": ""}, "EXT": {"s": "", "t": "", "r": ""}}, "P3": {"P1": {"s": "Spelling", "t": "LB", "r": ""}, "P2": {"s": "Maths", "t": "JR", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "Tutor Time", "t": "LB", "r": ""}, "LCH": {"s": "LUNCH", "t": "", "r": ""}, "P5": {"s": "Science", "t": "VV", "r": ""}, "P6": {"s": "PE", "t": "BS", "r": ""}, "P7": {"s": "PE", "t": "BS", "r": ""}, "P8": {"s": "Art & Design", "t": "IR", "r": ""}, "EXT": {"s": "", "t": "", "r": ""}}, "P4": {"P1": {"s": "Science", "t": "VV", "r": ""}, "P2": {"s": "Spelling", "t": "LB", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "Maths", "t": "JR", "r": ""}, "LCH": {"s": "LUNCH", "t": "", "r": ""}, "P5": {"s": "Geography", "t": "VV", "r": ""}, "P6": {"s": "PE", "t": "BS", "r": ""}, "P7": {"s": "PE", "t": "BS", "r": ""}, "P8": {"s": "LEGO", "t": "VV", "r": ""}, "EXT": {"s": "", "t": "", "r": ""}}, "P5": {"P1": {"s": "Maths", "t": "JR", "r": ""}, "P2": {"s": "ICT", "t": "VV", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "Design & Tech.", "t": "LB", "r": ""}, "LCH": {"s": "LUNCH", "t": "", "r": ""}, "P5": {"s": "Portuguese", "t": "JR", "r": ""}, "P6": {"s": "Science", "t": "VV", "r": ""}, "P7": {"s": "Science", "t": "VV", "r": ""}, "P8": {"s": "PSHE", "t": "LB", "r": ""}, "EXT": {"s": "", "t": "", "r": ""}}, "A1": {"P1": {"s": "PE", "t": "BS", "r": ""}, "P2": {"s": "PE", "t": "BS", "r": ""}, "BRK": {"s": "BREAK", "t": "", "r": ""}, "P3": {"s": "History", "t": "VV", "r": ""}, "P4": {"s": "Reading", "t": "LB", "r": ""}, "LCA": {"s": "LUNCH", "t": "", "r": ""}, "P6": {"s": "Geography", "t": "VV", "r": ""}, "P7": {"s": "Portuguese", "t": "JR", "r": ""}, "P8": {"s": "Science", "t": "VV", "r": ""}, "EXT": {"s": "Music & PA", "t": "CS", "r": ""}}}},
-  Secondary: {"Monday": {"FRM": {"A2": {"s": "Form Time", "t": "", "r": ""}, "A3": {"s": "Form Time", "t": "", "r": ""}, "A4": {"s": "Form Time", "t": "", "r": ""}, "A5\u03b1": {"s": "Form Time", "t": "", "r": ""}, "A5\u03b2": {"s": "Form Time", "t": "", "r": ""}, "A6\u03b1": {"s": "Form Time", "t": "", "r": ""}, "A6\u03b2": {"s": "Form Time", "t": "", "r": ""}}, "P1": {"A2": {"s": "English", "t": "NS", "r": ""}, "A3": {"s": "English", "t": "NS", "r": ""}, "A4": {"s": "Science", "t": "CF", "r": ""}, "A5\u03b1": {"s": "Geo. Opt.", "t": "NW", "r": ""}, "A5\u03b2": {"s": "Bus. Stud.", "t": "CV", "r": ""}, "A6\u03b1": {"s": "History", "t": "NW", "r": ""}, "A6\u03b2": {"s": "Bus. Stud.", "t": "CV", "r": ""}}, "P2": {"A2": {"s": "Maths", "t": "CF", "r": ""}, "A3": {"s": "Science", "t": "CF", "r": ""}, "A4": {"s": "Maths", "t": "MO", "r": ""}, "A5\u03b1": {"s": "Geo. Opt.", "t": "NW", "r": ""}, "A5\u03b2": {"s": "Bus. Stud.", "t": "CV", "r": ""}, "A6\u03b1": {"s": "History", "t": "NW", "r": ""}, "A6\u03b2": {"s": "Glob. Persp.", "t": "SVA", "r": ""}}, "BRK": {"A2": {"s": "BREAK", "t": "", "r": ""}, "A3": {"s": "BREAK", "t": "", "r": ""}, "A4": {"s": "BREAK", "t": "", "r": ""}, "A5\u03b1": {"s": "BREAK", "t": "", "r": ""}, "A5\u03b2": {"s": "BREAK", "t": "", "r": ""}, "A6\u03b1": {"s": "BREAK", "t": "", "r": ""}, "A6\u03b2": {"s": "BREAK", "t": "", "r": ""}}, "P3": {"A2": {"s": "Portuguese", "t": "RL", "r": ""}, "A3": {"s": "Maths", "t": "MO", "r": ""}, "A4": {"s": "English", "t": "NS", "r": ""}, "A5\u03b1": {"s": "English", "t": "NS", "r": ""}, "A5\u03b2": {"s": "English", "t": "NS", "r": ""}, "A6\u03b1": {"s": "Art", "t": "QV", "r": ""}, "A6\u03b2": {"s": "DT", "t": "MB", "r": ""}}, "P4": {"A2": {"s": "Science", "t": "CF", "r": ""}, "A3": {"s": "Portuguese", "t": "SA", "r": ""}, "A4": {"s": "Portuguese", "t": "MNS", "r": ""}, "A5\u03b1": {"s": "Art", "t": "QV", "r": ""}, "A5\u03b2": {"s": "DT", "t": "NJW", "r": ""}, "A6\u03b1": {"s": "English", "t": "NS", "r": ""}, "A6\u03b2": {"s": "English", "t": "NS", "r": ""}}, "LK3": {"A2": {"s": "LUNCH", "t": "", "r": ""}, "A3": {"s": "LUNCH", "t": "", "r": ""}, "A4": {"s": "LUNCH", "t": "", "r": ""}, "A5\u03b1": {"s": "", "t": "", "r": ""}, "A5\u03b2": {"s": "", "t": "", "r": ""}, "A6\u03b1": {"s": "", "t": "", "r": ""}, "A6\u03b2": {"s": "", "t": "", "r": ""}}, "P5i": {"A2": {"s": "", "t": "", "r": ""}, "A3": {"s": "", "t": "", "r": ""}, "A4": {"s": "", "t": "", "r": ""}, "A5\u03b1": {"s": "PE", "t": "DV", "r": ""}, "A5\u03b2": {"s": "PE", "t": "FPV", "r": ""}, "A6\u03b1": {"s": "Maths", "t": "MO", "r": ""}, "A6\u03b2": {"s": "Maths", "t": "MO", "r": ""}}, "P5k": {"A2": {"s": "History", "t": "NW", "r": ""}, "A3": {"s": "History", "t": "NW", "r": ""}, "A4": {"s": "History", "t": "NW", "r": ""}, "A5\u03b1": {"s": "", "t": "", "r": ""}, "A5\u03b2": {"s": "", "t": "", "r": ""}, "A6\u03b1": {"s": "", "t": "", "r": ""}, "A6\u03b2": {"s": "", "t": "", "r": ""}}, "LIG": {"A2": {"s": "", "t": "", "r": ""}, "A3": {"s": "", "t": "", "r": ""}, "A4": {"s": "", "t": "", "r": ""}, "A5\u03b1": {"s": "LUNCH", "t": "", "r": ""}, "A5\u03b2": {"s": "LUNCH", "t": "", "r": ""}, "A6\u03b1": {"s": "LUNCH", "t": "", "r": ""}, "A6\u03b2": {"s": "LUNCH", "t": "", "r": ""}}, "P6": {"A2": {"s": "Art", "t": "QV", "r": ""}, "A3": {"s": "DT", "t": "NJW", "r": ""}, "A4": {"s": "Glob. Persp.", "t": "SVA", "r": ""}, "A5\u03b1": {"s": "Spanish", "t": "XP", "r": ""}, "A5\u03b2": {"s": "French", "t": "AB", "r": ""}, "A6\u03b1": {"s": "Spanish", "t": "XP", "r": ""}, "A6\u03b2": {"s": "French", "t": "AB", "r": ""}}, "P7": {"A2": {"s": "Geography", "t": "NW", "r": ""}, "A3": {"s": "Art", "t": "QV", "r": ""}, "A4": {"s": "Science", "t": "CF", "r": ""}, "A5\u03b1": {"s": "Sci.(Bio)", "t": "TBA", "r": ""}, "A5\u03b2": {"s": "Sci.(Bio)", "t": "TBA", "r": ""}, "A6\u03b1": {"s": "Sci.(Chem)", "t": "TBA", "r": ""}, "A6\u03b2": {"s": "Sci.(Chem)", "t": "TBA", "r": ""}}, "P8": {"A2": {"s": "Music & PA", "t": "MID", "r": ""}, "A3": {"s": "ICT", "t": "VF", "r": ""}, "A4": {"s": "PE", "t": "FA", "r": ""}, "A5\u03b1": {"s": "CS / ICT", "t": "JS", "r": ""}, "A5\u03b2": {"s": "CS / ICT", "t": "VF", "r": ""}, "A6\u03b1": {"s": "Port. 2nd", "t": "DPB", "r": ""}, "A6\u03b2": {"s": "Port. 2nd", "t": "DPB", "r": ""}}}, "Tuesday": {"FRM": {"A2": {"s": "Form Time", "t": "", "r": ""}, "A3": {"s": "Form Time", "t": "", "r": ""}, "A4": {"s": "Form Time", "t": "", "r": ""}, "A5\u03b1": {"s": "Form Time", "t": "", "r": ""}, "A5\u03b2": {"s": "Form Time", "t": "", "r": ""}, "A6\u03b1": {"s": "Form Time", "t": "", "r": ""}, "A6\u03b2": {"s": "Form Time", "t": "", "r": ""}}, "P1": {"A2": {"s": "Portuguese", "t": "SA", "r": ""}, "A3": {"s": "Portuguese", "t": "RL", "r": ""}, "A4": {"s": "Maths", "t": "MO", "r": ""}, "A5\u03b1": {"s": "English", "t": "NS", "r": ""}, "A5\u03b2": {"s": "English", "t": "NS", "r": ""}, "A6\u03b1": {"s": "Geography", "t": "NW", "r": ""}, "A6\u03b2": {"s": "Geography", "t": "NW", "r": ""}}, "P2": {"A2": {"s": "Maths", "t": "CF", "r": ""}, "A3": {"s": "Maths", "t": "MO", "r": ""}, "A4": {"s": "English", "t": "NS", "r": ""}, "A5\u03b1": {"s": "French", "t": "AB", "r": ""}, "A5\u03b2": {"s": "Spanish", "t": "XP", "r": ""}, "A6\u03b1": {"s": "French", "t": "AB", "r": ""}, "A6\u03b2": {"s": "Spanish", "t": "XP", "r": ""}}, "BRK": {"A2": {"s": "BREAK", "t": "", "r": ""}, "A3": {"s": "BREAK", "t": "", "r": ""}, "A4": {"s": "BREAK", "t": "", "r": ""}, "A5\u03b1": {"s": "BREAK", "t": "", "r": ""}, "A5\u03b2": {"s": "BREAK", "t": "", "r": ""}, "A6\u03b1": {"s": "BREAK", "t": "", "r": ""}, "A6\u03b2": {"s": "BREAK", "t": "", "r": ""}}, "P3": {"A2": {"s": "Science", "t": "CF", "r": ""}, "A3": {"s": "English", "t": "NS", "r": ""}, "A4": {"s": "Portuguese", "t": "MNS", "r": ""}, "A5\u03b1": {"s": "Sci.(Phys)", "t": "TBA", "r": ""}, "A5\u03b2": {"s": "Sci.(Phys)", "t": "TBA", "r": ""}, "A6\u03b1": {"s": "Sci.(Bio)", "t": "TBA", "r": ""}, "A6\u03b2": {"s": "Sci.(Bio)", "t": "TBA", "r": ""}}, "P4": {"A2": {"s": "Geography", "t": "NW", "r": ""}, "A3": {"s": "Geography", "t": "NW", "r": ""}, "A4": {"s": "Art", "t": "QV", "r": ""}, "A5\u03b1": {"s": "Maths", "t": "MO", "r": ""}, "A5\u03b2": {"s": "Maths", "t": "MO", "r": ""}, "A6\u03b1": {"s": "PE", "t": "DV", "r": ""}, "A6\u03b2": {"s": "PE", "t": "FPV", "r": ""}}, "LK3": {"A2": {"s": "LUNCH", "t": "", "r": ""}, "A3": {"s": "LUNCH", "t": "", "r": ""}, "A4": {"s": "LUNCH", "t": "", "r": ""}, "A5\u03b1": {"s": "", "t": "", "r": ""}, "A5\u03b2": {"s": "", "t": "", "r": ""}, "A6\u03b1": {"s": "", "t": "", "r": ""}, "A6\u03b2": {"s": "", "t": "", "r": ""}}, "P5i": {"A2": {"s": "", "t": "", "r": ""}, "A3": {"s": "", "t": "", "r": ""}, "A4": {"s": "", "t": "", "r": ""}, "A5\u03b1": {"s": "History", "t": "NW", "r": ""}, "A5\u03b2": {"s": "History", "t": "NW", "r": ""}, "A6\u03b1": {"s": "DT", "t": "MB", "r": ""}, "A6\u03b2": {"s": "DT", "t": "NJW", "r": ""}}, "P5k": {"A2": {"s": "Glob. Persp.", "t": "SVA", "r": ""}, "A3": {"s": "Glob. Persp.", "t": "SVA", "r": ""}, "A4": {"s": "PE", "t": "FA", "r": ""}, "A5\u03b1": {"s": "", "t": "", "r": ""}, "A5\u03b2": {"s": "", "t": "", "r": ""}, "A6\u03b1": {"s": "", "t": "", "r": ""}, "A6\u03b2": {"s": "", "t": "", "r": ""}}, "LIG": {"A2": {"s": "", "t": "", "r": ""}, "A3": {"s": "", "t": "", "r": ""}, "A4": {"s": "", "t": "", "r": ""}, "A5\u03b1": {"s": "LUNCH", "t": "", "r": ""}, "A5\u03b2": {"s": "LUNCH", "t": "", "r": ""}, "A6\u03b1": {"s": "LUNCH", "t": "", "r": ""}, "A6\u03b2": {"s": "LUNCH", "t": "", "r": ""}}, "P6": {"A2": {"s": "PE", "t": "BS", "r": ""}, "A3": {"s": "PE", "t": "FA", "r": ""}, "A4": {"s": "Science", "t": "CF", "r": ""}, "A5\u03b1": {"s": "Bus. Stud.", "t": "CV", "r": ""}, "A5\u03b2": {"s": "Geo. Opt.", "t": "NW", "r": ""}, "A6\u03b1": {"s": "CS / ICT", "t": "JS", "r": ""}, "A6\u03b2": {"s": "CS / ICT", "t": "VF", "r": ""}}, "P7": {"A2": {"s": "Music & PA", "t": "MID", "r": ""}, "A3": {"s": "Music & PA", "t": "MID", "r": ""}, "A4": {"s": "Music & PA", "t": "MID", "r": ""}, "A5\u03b1": {"s": "Art", "t": "QV", "r": ""}, "A5\u03b2": {"s": "DT", "t": "NJW", "r": ""}, "A6\u03b1": {"s": "Glob. Persp.", "t": "SVA", "r": ""}, "A6\u03b2": {"s": "History", "t": "NW", "r": ""}}, "P8": {"A2": {"s": "DT", "t": "NJW", "r": ""}, "A3": {"s": "DT", "t": "NJW", "r": ""}, "A4": {"s": "DT", "t": "NJW", "r": ""}, "A5\u03b1": {"s": "Port.", "t": "DPB", "r": ""}, "A5\u03b2": {"s": "Mandarin", "t": "ML", "r": ""}, "A6\u03b1": {"s": "Port.", "t": "DPB", "r": ""}, "A6\u03b2": {"s": "Mandarin", "t": "ML", "r": ""}}}, "Wednesday": {"FRM": {"A2": {"s": "Form Time", "t": "", "r": ""}, "A3": {"s": "Form Time", "t": "", "r": ""}, "A4": {"s": "Form Time", "t": "", "r": ""}, "A5\u03b1": {"s": "Form Time", "t": "", "r": ""}, "A5\u03b2": {"s": "Form Time", "t": "", "r": ""}, "A6\u03b1": {"s": "Form Time", "t": "", "r": ""}, "A6\u03b2": {"s": "Form Time", "t": "", "r": ""}}, "P1": {"A2": {"s": "English", "t": "NS", "r": ""}, "A3": {"s": "Maths", "t": "MO", "r": ""}, "A4": {"s": "Maths", "t": "MO", "r": ""}, "A5\u03b1": {"s": "Maths", "t": "MO", "r": ""}, "A5\u03b2": {"s": "Maths", "t": "MO", "r": ""}, "A6\u03b1": {"s": "English", "t": "NS", "r": ""}, "A6\u03b2": {"s": "English", "t": "NS", "r": ""}}, "P2": {"A2": {"s": "Maths", "t": "CF", "r": ""}, "A3": {"s": "English", "t": "NS", "r": ""}, "A4": {"s": "English", "t": "NS", "r": ""}, "A5\u03b1": {"s": "CS / ICT", "t": "JS", "r": ""}, "A5\u03b2": {"s": "CS / ICT", "t": "VF", "r": ""}, "A6\u03b1": {"s": "Sci.(Phys)", "t": "TBA", "r": ""}, "A6\u03b2": {"s": "Sci.(Phys)", "t": "TBA", "r": ""}}, "BRK": {"A2": {"s": "BREAK", "t": "", "r": ""}, "A3": {"s": "BREAK", "t": "", "r": ""}, "A4": {"s": "BREAK", "t": "", "r": ""}, "A5\u03b1": {"s": "BREAK", "t": "", "r": ""}, "A5\u03b2": {"s": "BREAK", "t": "", "r": ""}, "A6\u03b1": {"s": "BREAK", "t": "", "r": ""}, "A6\u03b2": {"s": "BREAK", "t": "", "r": ""}}, "P3": {"A2": {"s": "History", "t": "NW", "r": ""}, "A3": {"s": "History", "t": "NW", "r": ""}, "A4": {"s": "History", "t": "NW", "r": ""}, "A5\u03b1": {"s": "Sci.(Bio)", "t": "TBA", "r": ""}, "A5\u03b2": {"s": "Sci.(Bio)", "t": "TBA", "r": ""}, "A6\u03b1": {"s": "Art", "t": "QV", "r": ""}, "A6\u03b2": {"s": "DT", "t": "MB", "r": ""}}, "P4": {"A2": {"s": "Art", "t": "QV", "r": ""}, "A3": {"s": "Science", "t": "CF", "r": ""}, "A4": {"s": "Portuguese", "t": "SA", "r": ""}, "A5\u03b1": {"s": "Geography", "t": "NW", "r": ""}, "A5\u03b2": {"s": "Geography", "t": "NW", "r": ""}, "A6\u03b1": {"s": "Maths", "t": "MO", "r": ""}, "A6\u03b2": {"s": "Maths", "t": "MO", "r": ""}}, "LK3": {"A2": {"s": "LUNCH", "t": "", "r": ""}, "A3": {"s": "LUNCH", "t": "", "r": ""}, "A4": {"s": "LUNCH", "t": "", "r": ""}, "A5\u03b1": {"s": "", "t": "", "r": ""}, "A5\u03b2": {"s": "", "t": "", "r": ""}, "A6\u03b1": {"s": "", "t": "", "r": ""}, "A6\u03b2": {"s": "", "t": "", "r": ""}}, "P5i": {"A2": {"s": "", "t": "", "r": ""}, "A3": {"s": "", "t": "", "r": ""}, "A4": {"s": "", "t": "", "r": ""}, "A5\u03b1": {"s": "English", "t": "NS", "r": ""}, "A5\u03b2": {"s": "English", "t": "NS", "r": ""}, "A6\u03b1": {"s": "PE", "t": "DV", "r": ""}, "A6\u03b2": {"s": "PE", "t": "FPV", "r": ""}}, "P5k": {"A2": {"s": "Science", "t": "CF", "r": ""}, "A3": {"s": "RE", "t": "NS", "r": ""}, "A4": {"s": "Glob. Persp.", "t": "SVA", "r": ""}, "A5\u03b1": {"s": "", "t": "", "r": ""}, "A5\u03b2": {"s": "", "t": "", "r": ""}, "A6\u03b1": {"s": "", "t": "", "r": ""}, "A6\u03b2": {"s": "", "t": "", "r": ""}}, "LIG": {"A2": {"s": "", "t": "", "r": ""}, "A3": {"s": "", "t": "", "r": ""}, "A4": {"s": "", "t": "", "r": ""}, "A5\u03b1": {"s": "LUNCH", "t": "", "r": ""}, "A5\u03b2": {"s": "LUNCH", "t": "", "r": ""}, "A6\u03b1": {"s": "LUNCH", "t": "", "r": ""}, "A6\u03b2": {"s": "LUNCH", "t": "", "r": ""}}, "P6": {"A2": {"s": "Portuguese", "t": "RL", "r": ""}, "A3": {"s": "Portuguese", "t": "SA", "r": ""}, "A4": {"s": "ICT", "t": "VF", "r": ""}, "A5\u03b1": {"s": "Bus. Stud.", "t": "CV", "r": ""}, "A5\u03b2": {"s": "History", "t": "NW", "r": ""}, "A6\u03b1": {"s": "Bus. Stud.", "t": "CV", "r": ""}, "A6\u03b2": {"s": "Geo. Opt.", "t": "NW", "r": ""}}, "P7": {"A2": {"s": "PE", "t": "FA", "r": ""}, "A3": {"s": "PE", "t": "FPV", "r": ""}, "A4": {"s": "PE", "t": "NJW", "r": ""}, "A5\u03b1": {"s": "Spanish", "t": "XP", "r": ""}, "A5\u03b2": {"s": "French", "t": "AB", "r": ""}, "A6\u03b1": {"s": "Spanish", "t": "XP", "r": ""}, "A6\u03b2": {"s": "French", "t": "AB", "r": ""}}, "P8": {"A2": {"s": "ICT", "t": "VF", "r": ""}, "A3": {"s": "ICT", "t": "VF", "r": ""}, "A4": {"s": "Art", "t": "QV", "r": ""}, "A5\u03b1": {"s": "Port.", "t": "DPB", "r": ""}, "A5\u03b2": {"s": "Mandarin", "t": "ML", "r": ""}, "A6\u03b1": {"s": "Port.", "t": "DPB", "r": ""}, "A6\u03b2": {"s": "Mandarin", "t": "ML", "r": ""}}}, "Thursday": {"FRM": {"A2": {"s": "Form Time", "t": "", "r": ""}, "A3": {"s": "Form Time", "t": "", "r": ""}, "A4": {"s": "Form Time", "t": "", "r": ""}, "A5\u03b1": {"s": "Form Time", "t": "", "r": ""}, "A5\u03b2": {"s": "Form Time", "t": "", "r": ""}, "A6\u03b1": {"s": "Form Time", "t": "", "r": ""}, "A6\u03b2": {"s": "Form Time", "t": "", "r": ""}}, "P1": {"A2": {"s": "Science", "t": "CF", "r": ""}, "A3": {"s": "Portuguese", "t": "RL", "r": ""}, "A4": {"s": "English", "t": "NS", "r": ""}, "A5\u03b1": {"s": "Sci.(Chem)", "t": "TBA", "r": ""}, "A5\u03b2": {"s": "Sci.(Chem)", "t": "TBA", "r": ""}, "A6\u03b1": {"s": "Sci.(Bio)", "t": "TBA", "r": ""}, "A6\u03b2": {"s": "Sci.(Bio)", "t": "TBA", "r": ""}}, "P2": {"A2": {"s": "Geography", "t": "NW", "r": ""}, "A3": {"s": "Science", "t": "CF", "r": ""}, "A4": {"s": "Science", "t": "CF", "r": ""}, "A5\u03b1": {"s": "Maths", "t": "MO", "r": ""}, "A5\u03b2": {"s": "Maths", "t": "MO", "r": ""}, "A6\u03b1": {"s": "Geography", "t": "NW", "r": ""}, "A6\u03b2": {"s": "Geography", "t": "NW", "r": ""}}, "BRK": {"A2": {"s": "BREAK", "t": "", "r": ""}, "A3": {"s": "BREAK", "t": "", "r": ""}, "A4": {"s": "BREAK", "t": "", "r": ""}, "A5\u03b1": {"s": "BREAK", "t": "", "r": ""}, "A5\u03b2": {"s": "BREAK", "t": "", "r": ""}, "A6\u03b1": {"s": "BREAK", "t": "", "r": ""}, "A6\u03b2": {"s": "BREAK", "t": "", "r": ""}}, "P3": {"A2": {"s": "Maths", "t": "CF", "r": ""}, "A3": {"s": "Maths", "t": "MO", "r": ""}, "A4": {"s": "Maths", "t": "MO", "r": ""}, "A5\u03b1": {"s": "History", "t": "NW", "r": ""}, "A5\u03b2": {"s": "History", "t": "NW", "r": ""}, "A6\u03b1": {"s": "English", "t": "NS", "r": ""}, "A6\u03b2": {"s": "English", "t": "NS", "r": ""}}, "P4": {"A2": {"s": "RE", "t": "NS", "r": ""}, "A3": {"s": "Art", "t": "QV", "r": ""}, "A4": {"s": "DT", "t": "NJW", "r": ""}, "A5\u03b1": {"s": "DT", "t": "MB", "r": ""}, "A5\u03b2": {"s": "Art", "t": "QV", "r": ""}, "A6\u03b1": {"s": "DT", "t": "MB", "r": ""}, "A6\u03b2": {"s": "Art", "t": "QV", "r": ""}}, "LK3": {"A2": {"s": "LUNCH", "t": "", "r": ""}, "A3": {"s": "LUNCH", "t": "", "r": ""}, "A4": {"s": "LUNCH", "t": "", "r": ""}, "A5\u03b1": {"s": "", "t": "", "r": ""}, "A5\u03b2": {"s": "", "t": "", "r": ""}, "A6\u03b1": {"s": "", "t": "", "r": ""}, "A6\u03b2": {"s": "", "t": "", "r": ""}}, "P5i": {"A2": {"s": "", "t": "", "r": ""}, "A3": {"s": "", "t": "", "r": ""}, "A4": {"s": "", "t": "", "r": ""}, "A5\u03b1": {"s": "Port.", "t": "DPB", "r": ""}, "A5\u03b2": {"s": "Port.", "t": "CC", "r": ""}, "A6\u03b1": {"s": "Port.", "t": "DPB", "r": ""}, "A6\u03b2": {"s": "Port.", "t": "CC", "r": ""}}, "P5k": {"A2": {"s": "Portuguese", "t": "SA", "r": ""}, "A3": {"s": "Portuguese", "t": "SA", "r": ""}, "A4": {"s": "Portuguese", "t": "MNS", "r": ""}, "A5\u03b1": {"s": "", "t": "", "r": ""}, "A5\u03b2": {"s": "", "t": "", "r": ""}, "A6\u03b1": {"s": "", "t": "", "r": ""}, "A6\u03b2": {"s": "", "t": "", "r": ""}}, "LIG": {"A2": {"s": "", "t": "", "r": ""}, "A3": {"s": "", "t": "", "r": ""}, "A4": {"s": "", "t": "", "r": ""}, "A5\u03b1": {"s": "LUNCH", "t": "", "r": ""}, "A5\u03b2": {"s": "LUNCH", "t": "", "r": ""}, "A6\u03b1": {"s": "LUNCH", "t": "", "r": ""}, "A6\u03b2": {"s": "LUNCH", "t": "", "r": ""}}, "P6": {"A2": {"s": "English", "t": "NS", "r": ""}, "A3": {"s": "English", "t": "NS", "r": ""}, "A4": {"s": "Glob. Persp.", "t": "SVA", "r": ""}, "A5\u03b1": {"s": "Spanish", "t": "XP", "r": ""}, "A5\u03b2": {"s": "French", "t": "AB", "r": ""}, "A6\u03b1": {"s": "Spanish", "t": "XP", "r": ""}, "A6\u03b2": {"s": "French", "t": "AB", "r": ""}}, "P7": {"A2": {"s": "DT", "t": "NJW", "r": ""}, "A3": {"s": "DT", "t": "FPV", "r": ""}, "A4": {"s": "PE", "t": "FA", "r": ""}, "A5\u03b1": {"s": "Glob. Persp.", "t": "SVA", "r": ""}, "A5\u03b2": {"s": "Bus. Stud.", "t": "CV", "r": ""}, "A6\u03b1": {"s": "Sci.(Chem)", "t": "TBA", "r": ""}, "A6\u03b2": {"s": "Sci.(Chem)", "t": "TBA", "r": ""}}, "P8": {"A2": {"s": "PE", "t": "FA", "r": ""}, "A3": {"s": "PE", "t": "FPV", "r": ""}, "A4": {"s": "Art", "t": "QV", "r": ""}, "A5\u03b1": {"s": "PE", "t": "DV", "r": ""}, "A5\u03b2": {"s": "PE", "t": "NJW", "r": ""}, "A6\u03b1": {"s": "PE", "t": "DV", "r": ""}, "A6\u03b2": {"s": "PE", "t": "FPV", "r": ""}}}, "Friday": {"FRM": {"A2": {"s": "Form Time", "t": "", "r": ""}, "A3": {"s": "Form Time", "t": "", "r": ""}, "A4": {"s": "Form Time", "t": "", "r": ""}, "A5\u03b1": {"s": "Form Time", "t": "", "r": ""}, "A5\u03b2": {"s": "Form Time", "t": "", "r": ""}, "A6\u03b1": {"s": "Form Time", "t": "", "r": ""}, "A6\u03b2": {"s": "Form Time", "t": "", "r": ""}}, "P1": {"A2": {"s": "Maths", "t": "CF", "r": ""}, "A3": {"s": "English", "t": "NS", "r": ""}, "A4": {"s": "Maths", "t": "MO", "r": ""}, "A5\u03b1": {"s": "English", "t": "NS", "r": ""}, "A5\u03b2": {"s": "English", "t": "NS", "r": ""}, "A6\u03b1": {"s": "Maths", "t": "MO", "r": ""}, "A6\u03b2": {"s": "Maths", "t": "MO", "r": ""}}, "P2": {"A2": {"s": "Portuguese", "t": "RL", "r": ""}, "A3": {"s": "Maths", "t": "MO", "r": ""}, "A4": {"s": "Portuguese", "t": "SA", "r": ""}, "A5\u03b1": {"s": "Geography", "t": "NW", "r": ""}, "A5\u03b2": {"s": "History", "t": "NW", "r": ""}, "A6\u03b1": {"s": "Sci.(Phys)", "t": "TBA", "r": ""}, "A6\u03b2": {"s": "Sci.(Phys)", "t": "TBA", "r": ""}}, "BRK": {"A2": {"s": "BREAK", "t": "", "r": ""}, "A3": {"s": "BREAK", "t": "", "r": ""}, "A4": {"s": "BREAK", "t": "", "r": ""}, "A5\u03b1": {"s": "BREAK", "t": "", "r": ""}, "A5\u03b2": {"s": "BREAK", "t": "", "r": ""}, "A6\u03b1": {"s": "BREAK", "t": "", "r": ""}, "A6\u03b2": {"s": "BREAK", "t": "", "r": ""}}, "P3": {"A2": {"s": "Geography", "t": "NW", "r": ""}, "A3": {"s": "Geography", "t": "NW", "r": ""}, "A4": {"s": "Geography", "t": "NW", "r": ""}, "A5\u03b1": {"s": "Sci.(Phys)", "t": "TBA", "r": ""}, "A5\u03b2": {"s": "Sci.(Phys)", "t": "TBA", "r": ""}, "A6\u03b1": {"s": "Glob. Persp.", "t": "SVA", "r": ""}, "A6\u03b2": {"s": "Geo. Opt.", "t": "NW", "r": ""}}, "P4": {"A2": {"s": "Art", "t": "QV", "r": ""}, "A3": {"s": "Portuguese", "t": "RL", "r": ""}, "A4": {"s": "Science", "t": "CF", "r": ""}, "A5\u03b1": {"s": "DT", "t": "MB", "r": ""}, "A5\u03b2": {"s": "Art", "t": "QV", "r": ""}, "A6\u03b1": {"s": "Art", "t": "QV", "r": ""}, "A6\u03b2": {"s": "DT", "t": "MB", "r": ""}}, "LK3": {"A2": {"s": "LUNCH", "t": "", "r": ""}, "A3": {"s": "LUNCH", "t": "", "r": ""}, "A4": {"s": "LUNCH", "t": "", "r": ""}, "A5\u03b1": {"s": "", "t": "", "r": ""}, "A5\u03b2": {"s": "", "t": "", "r": ""}, "A6\u03b1": {"s": "", "t": "", "r": ""}, "A6\u03b2": {"s": "", "t": "", "r": ""}}, "P5i": {"A2": {"s": "", "t": "", "r": ""}, "A3": {"s": "", "t": "", "r": ""}, "A4": {"s": "", "t": "", "r": ""}, "A5\u03b1": {"s": "Bus. Stud.", "t": "CV", "r": ""}, "A5\u03b2": {"s": "Glob. Persp.", "t": "SVA", "r": ""}, "A6\u03b1": {"s": "History", "t": "NW", "r": ""}, "A6\u03b2": {"s": "History", "t": "NW", "r": ""}}, "P5k": {"A2": {"s": "Maths", "t": "CF", "r": ""}, "A3": {"s": "Science", "t": "CF", "r": ""}, "A4": {"s": "History", "t": "NW", "r": ""}, "A5\u03b1": {"s": "", "t": "", "r": ""}, "A5\u03b2": {"s": "", "t": "", "r": ""}, "A6\u03b1": {"s": "", "t": "", "r": ""}, "A6\u03b2": {"s": "", "t": "", "r": ""}}, "LIG": {"A2": {"s": "", "t": "", "r": ""}, "A3": {"s": "", "t": "", "r": ""}, "A4": {"s": "", "t": "", "r": ""}, "A5\u03b1": {"s": "LUNCH", "t": "", "r": ""}, "A5\u03b2": {"s": "LUNCH", "t": "", "r": ""}, "A6\u03b1": {"s": "LUNCH", "t": "", "r": ""}, "A6\u03b2": {"s": "LUNCH", "t": "", "r": ""}}, "P6": {"A2": {"s": "Science", "t": "CF", "r": ""}, "A3": {"s": "RE", "t": "NS", "r": ""}, "A4": {"s": "English", "t": "NS", "r": ""}, "A5\u03b1": {"s": "Add. Maths", "t": "MO", "r": ""}, "A5\u03b2": {"s": "Maths", "t": "MO", "r": ""}, "A6\u03b1": {"s": "Add. Maths", "t": "MO", "r": ""}, "A6\u03b2": {"s": "Maths", "t": "MO", "r": ""}}, "P7": {"A2": {"s": "PE", "t": "FA", "r": ""}, "A3": {"s": "PE", "t": "FPV", "r": ""}, "A4": {"s": "PE", "t": "NJW", "r": ""}, "A5\u03b1": {"s": "CS / ICT", "t": "VF", "r": ""}, "A5\u03b2": {"s": "CS / ICT", "t": "JS", "r": ""}, "A6\u03b1": {"s": "CS / ICT", "t": "VF", "r": ""}, "A6\u03b2": {"s": "CS / ICT", "t": "JS", "r": ""}}, "P8": {"A2": {"s": "History", "t": "NW", "r": ""}, "A3": {"s": "DT", "t": "NJW", "r": ""}, "A4": {"s": "PE", "t": "FA", "r": ""}, "A5\u03b1": {"s": "PE", "t": "DV", "r": ""}, "A5\u03b2": {"s": "PE", "t": "FPV", "r": ""}, "A6\u03b1": {"s": "PE", "t": "DV", "r": ""}, "A6\u03b2": {"s": "PE", "t": "FPV", "r": ""}}}},
-  Senior:    {"Monday": {"FRM": {"A7\u03b1": {"s": "Form Time", "t": "", "r": ""}, "A7\u03b2": {"s": "Form Time", "t": "", "r": ""}, "A8\u03b1": {"s": "Form Time", "t": "", "r": ""}, "A8\u03b2": {"s": "Form Time", "t": "", "r": ""}}, "L1": {"A7\u03b1": {"s": "Global Persp.", "t": "SVA", "r": ""}, "A7\u03b2": {"s": "Global Persp.", "t": "SVA", "r": ""}, "A8\u03b1": {"s": "Global Persp.", "t": "SVA", "r": ""}, "A8\u03b2": {"s": "Global Persp.", "t": "SVA", "r": ""}}, "L2": {"A7\u03b1": {"s": "Mathematics", "t": "PK", "r": ""}, "A7\u03b2": {"s": "Mathematics", "t": "PK", "r": ""}, "A8\u03b1": {"s": "Mathematics", "t": "PK", "r": ""}, "A8\u03b2": {"s": "Mathematics", "t": "PK", "r": ""}}, "BRK": {"A7\u03b1": {"s": "BREAK", "t": "", "r": ""}, "A7\u03b2": {"s": "BREAK", "t": "", "r": ""}, "A8\u03b1": {"s": "BREAK", "t": "", "r": ""}, "A8\u03b2": {"s": "BREAK", "t": "", "r": ""}}, "L3": {"A7\u03b1": {"s": "Biology", "t": "PM", "r": ""}, "A7\u03b2": {"s": "Env. Mgmt.", "t": "WL", "r": ""}, "A8\u03b1": {"s": "Biology", "t": "PM", "r": ""}, "A8\u03b2": {"s": "Env. Mgmt.", "t": "WL", "r": ""}}, "L4": {"A7\u03b1": {"s": "Env. Mgmt.", "t": "WL", "r": ""}, "A7\u03b2": {"s": "Biology", "t": "PM", "r": ""}, "A8\u03b1": {"s": "Env. Mgmt.", "t": "WL", "r": ""}, "A8\u03b2": {"s": "Biology", "t": "PM", "r": ""}}, "LCH": {"A7\u03b1": {"s": "LUNCH", "t": "", "r": ""}, "A7\u03b2": {"s": "LUNCH", "t": "", "r": ""}, "A8\u03b1": {"s": "LUNCH", "t": "", "r": ""}, "A8\u03b2": {"s": "LUNCH", "t": "", "r": ""}}, "L5": {"A7\u03b1": {"s": "History", "t": "WL", "r": ""}, "A7\u03b2": {"s": "Spanish", "t": "TS", "r": ""}, "A8\u03b1": {"s": "History", "t": "WL", "r": ""}, "A8\u03b2": {"s": "Spanish", "t": "TS", "r": ""}}, "L6": {"A7\u03b1": {"s": "Spanish", "t": "TS", "r": ""}, "A7\u03b2": {"s": "History", "t": "WL", "r": ""}, "A8\u03b1": {"s": "Spanish", "t": "TS", "r": ""}, "A8\u03b2": {"s": "History", "t": "WL", "r": ""}}}, "Tuesday": {"FRM": {"A7\u03b1": {"s": "Form Time", "t": "", "r": ""}, "A7\u03b2": {"s": "Form Time", "t": "", "r": ""}, "A8\u03b1": {"s": "Form Time", "t": "", "r": ""}, "A8\u03b2": {"s": "Form Time", "t": "", "r": ""}}, "L1": {"A7\u03b1": {"s": "English AS", "t": "ES", "r": ""}, "A7\u03b2": {"s": "English AS", "t": "ES", "r": ""}, "A8\u03b1": {"s": "English AS", "t": "ES", "r": ""}, "A8\u03b2": {"s": "English AS", "t": "ES", "r": ""}}, "L2": {"A7\u03b1": {"s": "Chemistry", "t": "MD", "r": ""}, "A7\u03b2": {"s": "Physics", "t": "CP", "r": ""}, "A8\u03b1": {"s": "Chemistry", "t": "MD", "r": ""}, "A8\u03b2": {"s": "Physics", "t": "CP", "r": ""}}, "BRK": {"A7\u03b1": {"s": "BREAK", "t": "", "r": ""}, "A7\u03b2": {"s": "BREAK", "t": "", "r": ""}, "A8\u03b1": {"s": "BREAK", "t": "", "r": ""}, "A8\u03b2": {"s": "BREAK", "t": "", "r": ""}}, "L3": {"A7\u03b1": {"s": "Business", "t": "MK", "r": ""}, "A7\u03b2": {"s": "Business", "t": "MK", "r": ""}, "A8\u03b1": {"s": "Business", "t": "MK", "r": ""}, "A8\u03b2": {"s": "Business", "t": "MK", "r": ""}}, "L4": {"A7\u03b1": {"s": "Marine Sci.", "t": "PM", "r": ""}, "A7\u03b2": {"s": "D&T", "t": "MB", "r": ""}, "A8\u03b1": {"s": "Marine Sci.", "t": "PM", "r": ""}, "A8\u03b2": {"s": "D&T", "t": "MB", "r": ""}}, "LCH": {"A7\u03b1": {"s": "LUNCH", "t": "", "r": ""}, "A7\u03b2": {"s": "LUNCH", "t": "", "r": ""}, "A8\u03b1": {"s": "LUNCH", "t": "", "r": ""}, "A8\u03b2": {"s": "LUNCH", "t": "", "r": ""}}, "L5": {"A7\u03b1": {"s": "Mathematics", "t": "PK", "r": ""}, "A7\u03b2": {"s": "Mathematics", "t": "PK", "r": ""}, "A8\u03b1": {"s": "Mathematics", "t": "PK", "r": ""}, "A8\u03b2": {"s": "Mathematics", "t": "PK", "r": ""}}, "L6": {"A7\u03b1": {"s": "Psychology", "t": "SVA", "r": ""}, "A7\u03b2": {"s": "Travel & T.", "t": "WL", "r": ""}, "A8\u03b1": {"s": "Psychology", "t": "SVA", "r": ""}, "A8\u03b2": {"s": "Travel & T.", "t": "WL", "r": ""}}}, "Wednesday": {"FRM": {"A7\u03b1": {"s": "Form Time", "t": "", "r": ""}, "A7\u03b2": {"s": "Form Time", "t": "", "r": ""}, "A8\u03b1": {"s": "Form Time", "t": "", "r": ""}, "A8\u03b2": {"s": "Form Time", "t": "", "r": ""}}, "L1": {"A7\u03b1": {"s": "Global Persp.", "t": "SVA", "r": ""}, "A7\u03b2": {"s": "Global Persp.", "t": "SVA", "r": ""}, "A8\u03b1": {"s": "Global Persp.", "t": "SVA", "r": ""}, "A8\u03b2": {"s": "Global Persp.", "t": "SVA", "r": ""}}, "L2": {"A7\u03b1": {"s": "Biology", "t": "PM", "r": ""}, "A7\u03b2": {"s": "Marine Sci.", "t": "PM", "r": ""}, "A8\u03b1": {"s": "Biology", "t": "PM", "r": ""}, "A8\u03b2": {"s": "Marine Sci.", "t": "PM", "r": ""}}, "BRK": {"A7\u03b1": {"s": "BREAK", "t": "", "r": ""}, "A7\u03b2": {"s": "BREAK", "t": "", "r": ""}, "A8\u03b1": {"s": "BREAK", "t": "", "r": ""}, "A8\u03b2": {"s": "BREAK", "t": "", "r": ""}}, "L3": {"A7\u03b1": {"s": "English Lit.", "t": "ES", "r": ""}, "A7\u03b2": {"s": "English Lit.", "t": "ES", "r": ""}, "A8\u03b1": {"s": "English Lit.", "t": "ES", "r": ""}, "A8\u03b2": {"s": "English Lit.", "t": "ES", "r": ""}}, "L4": {"A7\u03b1": {"s": "Art", "t": "MB", "r": ""}, "A7\u03b2": {"s": "Physics", "t": "CP", "r": ""}, "A8\u03b1": {"s": "Art", "t": "MB", "r": ""}, "A8\u03b2": {"s": "Physics", "t": "CP", "r": ""}}, "LCH": {"A7\u03b1": {"s": "LUNCH", "t": "", "r": ""}, "A7\u03b2": {"s": "LUNCH", "t": "", "r": ""}, "A8\u03b1": {"s": "LUNCH", "t": "", "r": ""}, "A8\u03b2": {"s": "LUNCH", "t": "", "r": ""}}, "L5": {"A7\u03b1": {"s": "Media Stud.", "t": "EH", "r": ""}, "A7\u03b2": {"s": "ICT / CS", "t": "JS", "r": ""}, "A8\u03b1": {"s": "Media Stud.", "t": "EH", "r": ""}, "A8\u03b2": {"s": "ICT / CS", "t": "JS", "r": ""}}, "L6": {"A7\u03b1": {"s": "ICT / CS", "t": "JS", "r": ""}, "A7\u03b2": {"s": "Media Stud.", "t": "EH", "r": ""}, "A8\u03b1": {"s": "ICT / CS", "t": "JS", "r": ""}, "A8\u03b2": {"s": "Media Stud.", "t": "EH", "r": ""}}}, "Thursday": {"FRM": {"A7\u03b1": {"s": "Form Time", "t": "", "r": ""}, "A7\u03b2": {"s": "Form Time", "t": "", "r": ""}, "A8\u03b1": {"s": "Form Time", "t": "", "r": ""}, "A8\u03b2": {"s": "Form Time", "t": "", "r": ""}}, "L1": {"A7\u03b1": {"s": "Mathematics", "t": "PK", "r": ""}, "A7\u03b2": {"s": "Mathematics", "t": "PK", "r": ""}, "A8\u03b1": {"s": "Mathematics", "t": "PK", "r": ""}, "A8\u03b2": {"s": "Mathematics", "t": "PK", "r": ""}}, "L2": {"A7\u03b1": {"s": "Chemistry", "t": "MD", "r": ""}, "A7\u03b2": {"s": "D&T", "t": "MB", "r": ""}, "A8\u03b1": {"s": "Chemistry", "t": "MD", "r": ""}, "A8\u03b2": {"s": "D&T", "t": "MB", "r": ""}}, "BRK": {"A7\u03b1": {"s": "BREAK", "t": "", "r": ""}, "A7\u03b2": {"s": "BREAK", "t": "", "r": ""}, "A8\u03b1": {"s": "BREAK", "t": "", "r": ""}, "A8\u03b2": {"s": "BREAK", "t": "", "r": ""}}, "L3": {"A7\u03b1": {"s": "Env. Mgmt.", "t": "WL", "r": ""}, "A7\u03b2": {"s": "Env. Mgmt.", "t": "WL", "r": ""}, "A8\u03b1": {"s": "Env. Mgmt.", "t": "WL", "r": ""}, "A8\u03b2": {"s": "Env. Mgmt.", "t": "WL", "r": ""}}, "L4": {"A7\u03b1": {"s": "English AS", "t": "ES", "r": ""}, "A7\u03b2": {"s": "English AS", "t": "ES", "r": ""}, "A8\u03b1": {"s": "English AS", "t": "ES", "r": ""}, "A8\u03b2": {"s": "English AS", "t": "ES", "r": ""}}, "LCH": {"A7\u03b1": {"s": "LUNCH", "t": "", "r": ""}, "A7\u03b2": {"s": "LUNCH", "t": "", "r": ""}, "A8\u03b1": {"s": "LUNCH", "t": "", "r": ""}, "A8\u03b2": {"s": "LUNCH", "t": "", "r": ""}}, "L5": {"A7\u03b1": {"s": "Psychology", "t": "SVA", "r": ""}, "A7\u03b2": {"s": "Spanish", "t": "TS", "r": ""}, "A8\u03b1": {"s": "Psychology", "t": "SVA", "r": ""}, "A8\u03b2": {"s": "Spanish", "t": "TS", "r": ""}}, "L6": {"A7\u03b1": {"s": "Spanish", "t": "TS", "r": ""}, "A7\u03b2": {"s": "Psychology", "t": "SVA", "r": ""}, "A8\u03b1": {"s": "Spanish", "t": "TS", "r": ""}, "A8\u03b2": {"s": "Psychology", "t": "SVA", "r": ""}}}, "Friday": {"FRM": {"A7\u03b1": {"s": "Form Time", "t": "", "r": ""}, "A7\u03b2": {"s": "Form Time", "t": "", "r": ""}, "A8\u03b1": {"s": "Form Time", "t": "", "r": ""}, "A8\u03b2": {"s": "Form Time", "t": "", "r": ""}}, "L1": {"A7\u03b1": {"s": "Biology", "t": "PM", "r": ""}, "A7\u03b2": {"s": "Physics", "t": "CP", "r": ""}, "A8\u03b1": {"s": "Biology", "t": "PM", "r": ""}, "A8\u03b2": {"s": "Physics", "t": "CP", "r": ""}}, "L2": {"A7\u03b1": {"s": "Physics", "t": "CP", "r": ""}, "A7\u03b2": {"s": "Biology", "t": "PM", "r": ""}, "A8\u03b1": {"s": "Physics", "t": "CP", "r": ""}, "A8\u03b2": {"s": "Biology", "t": "PM", "r": ""}}, "BRK": {"A7\u03b1": {"s": "BREAK", "t": "", "r": ""}, "A7\u03b2": {"s": "BREAK", "t": "", "r": ""}, "A8\u03b1": {"s": "BREAK", "t": "", "r": ""}, "A8\u03b2": {"s": "BREAK", "t": "", "r": ""}}, "L3": {"A7\u03b1": {"s": "Media Stud.", "t": "EH", "r": ""}, "A7\u03b2": {"s": "Art", "t": "MB", "r": ""}, "A8\u03b1": {"s": "Media Stud.", "t": "EH", "r": ""}, "A8\u03b2": {"s": "Art", "t": "MB", "r": ""}}, "L4": {"A7\u03b1": {"s": "Mathematics", "t": "PK", "r": ""}, "A7\u03b2": {"s": "Mathematics", "t": "PK", "r": ""}, "A8\u03b1": {"s": "Mathematics", "t": "PK", "r": ""}, "A8\u03b2": {"s": "Mathematics", "t": "PK", "r": ""}}, "LCH": {"A7\u03b1": {"s": "LUNCH", "t": "", "r": ""}, "A7\u03b2": {"s": "LUNCH", "t": "", "r": ""}, "A8\u03b1": {"s": "LUNCH", "t": "", "r": ""}, "A8\u03b2": {"s": "LUNCH", "t": "", "r": ""}}, "L5": {"A7\u03b1": {"s": "Global Persp.", "t": "SVA", "r": ""}, "A7\u03b2": {"s": "Global Persp.", "t": "SVA", "r": ""}, "A8\u03b1": {"s": "Global Persp.", "t": "SVA", "r": ""}, "A8\u03b2": {"s": "Global Persp.", "t": "SVA", "r": ""}}, "L6": {"A7\u03b1": {"s": "English Lit.", "t": "ES", "r": ""}, "A7\u03b2": {"s": "Business", "t": "MK", "r": ""}, "A8\u03b1": {"s": "English Lit.", "t": "ES", "r": ""}, "A8\u03b2": {"s": "Travel & T.", "t": "WL", "r": ""}}}}
-};
-const PRI_PERIODS = [["P1", "08:30\u201309:15", "lesson"], ["P2", "09:15\u201310:00", "lesson"], ["BRK", "10:00\u201310:35", "break"], ["P3", "10:35\u201311:20", "lesson"], ["LCH", "11:20\u201312:05", "lunch"], ["P4", "11:20\u201312:05", "lesson"], ["P5", "12:05\u201312:50", "lesson"], ["LCA", "12:05\u201312:50", "lunch"], ["P6", "12:50\u201313:25", "lesson"], ["P7", "13:25\u201314:20", "lesson"], ["P8", "14:20\u201315:05", "lesson"], ["EXT", "15:05\u201315:50", "ext"]];
-const SEC_PERIODS = [["FRM", "08:15\u201308:30", "form"], ["P1", "08:30\u201309:15", "lesson"], ["P2", "09:15\u201310:00", "lesson"], ["BRK", "10:00\u201310:35", "break"], ["P3", "10:35\u201311:20", "lesson"], ["P4", "11:20\u201312:05", "lesson"], ["LK3", "12:05\u201312:50", "lunch"], ["P5i", "12:05\u201312:50", "lesson"], ["P5k", "12:50\u201313:35", "lesson"], ["LIG", "12:50\u201313:35", "lunch"], ["P6", "13:35\u201314:20", "lesson"], ["P7", "14:20\u201315:05", "lesson"], ["P8", "15:05\u201315:50", "lesson"]];
-const SEN_PERIODS = [["FRM", "08:15\u201308:30", "form"], ["L1", "08:30\u201309:30", "lesson"], ["L2", "09:30\u201310:30", "lesson"], ["BRK", "10:30\u201310:50", "break"], ["L3", "10:50\u201311:50", "lesson"], ["L4", "11:50\u201312:50", "lesson"], ["LCH", "12:50\u201313:50", "lunch"], ["L5", "13:50\u201314:50", "lesson"], ["L6", "14:50\u201315:50", "lesson"]];
-const PRIMARY_YGS   = ["KG", "P1", "P2", "P3", "P4", "P5", "A1"];
-const SECONDARY_YGS = ["A2", "A3", "A4", "A5\u03b1", "A5\u03b2", "A6\u03b1", "A6\u03b2"];
-const SENIOR_YGS    = ["A7\u03b1", "A7\u03b2", "A8\u03b1", "A8\u03b2"];
+    const OPTIONS_MODEL = {
+      ks3: [
+        {
+          title:'A2–A4 compulsory core',
+          tag:'Compulsory',
+          items:[
+            'English — 1 double + 3 singles',
+            'Maths — 6 periods',
+            'Science — 6 periods',
+            'Geography — 2 singles',
+            'History — 2 singles',
+            'Global Perspectives — 1 single',
+            'Music & Performing Arts — 2 singles',
+            'RE — 1 single',
+            'Portuguese 1st / Portuguese 2nd — 3 singles at same time',
+            'PE — 2 doubles',
+            'PSHE — 1 single'
+          ]
+        },
+        {
+          title:'A2–A4 blocked lines',
+          tag:'Parallel lines',
+          items:[
+            'Spanish alpha ↔ ICT alpha (double)',
+            'Spanish beta ↔ ICT beta (double)',
+            'DT alpha ↔ Art alpha (double)',
+            'DT beta ↔ Art beta (double)',
+            'A3 and A4 Maths / Science should align where possible'
+          ]
+        }
+      ],
+      igcse: [
+        {
+          title:'A5–A6 compulsory core',
+          tag:'Compulsory',
+          items:[
+            'English — 2 singles + 1 double, shared timing across A5/A6',
+            'Science — 3 doubles',
+            'History — 4 periods, ideally 2 doubles',
+            'Geography — 4 periods, ideally 2 doubles',
+            'A5 RE — 1 period with NS'
+          ]
+        },
+        {
+          title:'Option Block 1 — Languages',
+          tag:'Option block',
+          items:[
+            'French — AB',
+            'Spanish — XP',
+            'English Literature — ES',
+            'Mandarin — ML',
+            '3 periods total, can be doubles and singles, but not just singles'
+          ]
+        },
+        {
+          title:'Option Block 2 — ICT included',
+          tag:'Option block',
+          items:[
+            'DT — MB / NJW / FPV',
+            'Computer Science — VF',
+            'ICT — JS',
+            'Business Studies — CV / MK',
+            'Global Perspectives — NW',
+            'All run at the same time',
+            'Block lines carry the same total number of periods',
+            'DT / CS / Business / Global are double-heavy by rule'
+          ]
+        },
+        {
+          title:'Option Block 3',
+          tag:'Option block',
+          items:[
+            'Art & Design — QV',
+            'PE Option — DV',
+            'Music — MID',
+            '1 double + 2 singles'
+          ]
+        },
+        {
+          title:'Maths extension line',
+          tag:'Parallel line',
+          items:[
+            'Additional Maths — PK / MO',
+            'Extended Maths — CP / PK',
+            'Must run at same time',
+            '3 doubles'
+          ]
+        }
+      ],
+      alevel: [
+        {
+          title:'A Level — placeholder pending later information',
+          tag:'Pending',
+          items:[
+            'Compulsory and option lines to be updated when A-level non-negotiables arrive',
+            'This build leaves the structure visible without guessing placements'
+          ]
+        }
+      ]
+    };
 
-const STAFF = {
-  LB: {name:'LB',campus:'Primary',cross:false,role:'Teaching',dept:'Primary',subjects:['English','Primary'],ygs:['P1','P2','P3','P4','P5','A1'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Full',stage:'Upper'},
-  FR: {name:'FR',campus:'Primary',cross:false,role:'Teaching',dept:'Primary',subjects:['English','Phonics'],ygs:['P1','P2','P3','P4','P5','A1'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Full',stage:'Upper'},
-  VV: {name:'VV',campus:'Primary',cross:false,role:'Teaching',dept:'Primary',subjects:['Science','Geography','History','ICT'],ygs:['P1','P2','P3','P4','P5','A1'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Full',stage:'Upper'},
-  JR: {name:'JR',campus:'Primary',cross:false,role:'Teaching',dept:'Primary',subjects:['Portuguese','Maths'],ygs:['P1','P2','P3','P4','P5','A1'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Full',stage:'Lower'},
-  LM: {name:'LM',campus:'Primary',cross:false,role:'Teaching',dept:'English',subjects:['English'],ygs:['P1','P2','P3','P4','P5','A1'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Full',stage:'Upper',absent:'Nov 2026'},
-  BS: {name:'BS',campus:'Primary',cross:false,role:'Teaching',dept:'PE',subjects:['PE'],ygs:['P1','P2','P3','P4','P5','A1'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Full',stage:'Lower'},
-  CS: {name:'CS',campus:'Primary',cross:false,role:'Teaching',dept:'Music',subjects:['Music'],ygs:['P1','P2','P3','P4','P5','A1'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Full',stage:'Upper'},
-  MF: {name:'MF',campus:'Primary',cross:false,role:'Teaching',dept:'Music',subjects:['Music'],ygs:['P1','P2','P3','P4','P5','A1'],days:{Mon:true,Tue:true,Wed:false,Thu:true,Fri:false},fte:'Part',stage:'Lower'},
-  AS: {name:'AS',campus:'Primary',cross:false,role:'Teaching',dept:'Early Years',subjects:['Early Years'],ygs:['Nursery','Reception'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'TBC',stage:'EY'},
-  AMA:{name:'AMA',campus:'Primary',cross:false,role:'Teaching',dept:'Early Years',subjects:['Early Years'],ygs:['Nursery','Reception','P1'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Full',stage:'EY'},
-  MT: {name:'MT',campus:'Primary',cross:false,role:'Teaching',dept:'TBC',subjects:['TBC'],ygs:[],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'TBC',stage:'TBC'},
-  JA: {name:'JA',campus:'Primary',cross:false,role:'Teaching',dept:'TBC',subjects:['TBC'],ygs:[],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'TBC',stage:'TBC'},
-  CF: {name:'CF',campus:'Secondary',cross:false,role:'Teaching',dept:'Science',subjects:['Science','Maths'],ygs:['A2','A3','A4'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Full'},
-  NS: {name:'NS',campus:'Secondary',cross:false,role:'Teaching',dept:'English',subjects:['English','RE'],ygs:['A2','A3','A4','A5'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Full'},
-  NW: {name:'NW',campus:'Secondary',cross:false,role:'Teaching',dept:'Humanities',subjects:['History','Geography','Global Perspectives'],ygs:['A2','A3','A4','A5','A6','A7','A8'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Full'},
-  MO: {name:'MO',campus:'Secondary',cross:false,role:'Teaching',dept:'Maths',subjects:['Maths','Additional Maths'],ygs:['A3','A4','A5','A6'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Full'},
-  NJW:{name:'NJW',campus:'Secondary',cross:false,role:'Teaching',dept:'DT',subjects:['DT','PE'],ygs:['A2','A3','A4','A5','A6'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Full'},
-  FPV:{name:'FPV',campus:'Secondary',cross:false,role:'Teaching',dept:'PE',subjects:['PE','DT'],ygs:['A2','A3','A4','A5','A6'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Full'},
-  FA: {name:'FA',campus:'Secondary',cross:false,role:'Teaching',dept:'PE',subjects:['PE'],ygs:['A3','A4','A5','A6'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Full'},
-  IR: {name:'IR',campus:'Primary',cross:true,role:'Teaching',dept:'Art',subjects:['Art'],ygs:['P1','P2','P3','P4','P5','A1','A2','A3','A4'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Full'},
-  VF: {name:'VF',campus:'Secondary',cross:false,role:'Teaching',dept:'ICT',subjects:['Computer Science','ICT'],ygs:['A2','A3','A4','A5','A6'],days:{Mon:true,Tue:true,Wed:true,Thu:false,Fri:true},fte:'Part'},
-  TBA:{name:'TBA',campus:'Secondary',cross:false,role:'Teaching',dept:'Science',subjects:['Science'],ygs:['A5','A6'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Full'},
-  CV: {name:'CV',campus:'Secondary',cross:false,role:'Teaching',dept:'Business',subjects:['Business Studies'],ygs:['A5','A6','A7','A8'],days:{Mon:false,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Part'},
-  SA: {name:'SA',campus:'Secondary',cross:false,role:'Teaching',dept:'Languages',subjects:['Portuguese'],ygs:['A2','A3','A4'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Full'},
-  RL: {name:'RL',campus:'Secondary',cross:false,role:'Teaching',dept:'Languages',subjects:['Portuguese'],ygs:['A2','A3','A4'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Full'},
-  MNS:{name:'MNS',campus:'Secondary',cross:false,role:'Teaching',dept:'Languages',subjects:['Portuguese'],ygs:['A4'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:false},fte:'Part'},
-  CC: {name:'CC',campus:'Secondary',cross:false,role:'Teaching',dept:'Languages',subjects:['Portuguese'],ygs:['A5'],days:{Mon:true,Tue:false,Wed:true,Thu:false,Fri:true},fte:'Part'},
-  XP: {name:'XP',campus:'Secondary',cross:false,role:'Teaching',dept:'Languages',subjects:['Spanish'],ygs:['A3','A4','A5','A6'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Full'},
-  AB: {name:'AB',campus:'Secondary',cross:false,role:'Teaching',dept:'Languages',subjects:['French'],ygs:['A5','A6','A7','A8'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Full'},
-  ML: {name:'ML',campus:'Secondary',cross:false,role:'Teaching',dept:'Languages',subjects:['Mandarin'],ygs:['A5','A6','A7','A8'],days:{Mon:true,Tue:false,Wed:true,Thu:false,Fri:true},fte:'Part'},
-  QV: {name:'QV',campus:'Secondary',cross:false,role:'Teaching',dept:'Art',subjects:['Art','Global Perspectives'],ygs:['A2','A3','A4','A5','A6'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Full'},
-  MID:{name:'MID',campus:'Secondary',cross:false,role:'Teaching',dept:'Music',subjects:['Music'],ygs:['A2','A3','A4'],days:{Mon:false,Tue:true,Wed:false,Thu:false,Fri:true},fte:'Part',note:'Days TBC'},
-  SVA:{name:'SVA',campus:'Senior',cross:false,role:'Teaching',dept:'Humanities',subjects:['Global Perspectives','Psychology'],ygs:['A7','A8'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Full'},
-  PM: {name:'PM',campus:'Senior',cross:false,role:'Teaching',dept:'Science',subjects:['Biology','Environmental Management','Marine Science'],ygs:['A7','A8'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Full'},
-  WL: {name:'WL',campus:'Senior',cross:false,role:'Teaching',dept:'Humanities',subjects:['Environmental Management','History','Travel and Tourism'],ygs:['A7','A8'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Full'},
-  PK: {name:'PK',campus:'Senior',cross:false,role:'Teaching',dept:'Maths',subjects:['Maths'],ygs:['A7','A8'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Full'},
-  ES: {name:'ES',campus:'Senior',cross:false,role:'Teaching',dept:'English',subjects:['English','English Literature','Global Perspectives'],ygs:['A7','A8'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Full'},
-  MD: {name:'MD',campus:'Senior',cross:false,role:'Teaching',dept:'Science',subjects:['Chemistry'],ygs:['A7','A8'],days:{Mon:true,Tue:true,Wed:false,Thu:true,Fri:false},fte:'Part'},
-  CP: {name:'CP',campus:'Senior',cross:false,role:'Teaching',dept:'Science',subjects:['Physics'],ygs:['A7','A8'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Full'},
-  TS: {name:'TS',campus:'Senior',cross:false,role:'Teaching',dept:'Languages',subjects:['Spanish'],ygs:['A7','A8'],days:{Mon:true,Tue:true,Wed:false,Thu:true,Fri:false},fte:'Part'},
-  EH: {name:'EH',campus:'Senior',cross:false,role:'Teaching',dept:'Media',subjects:['Media Studies'],ygs:['A7','A8'],days:{Mon:false,Tue:false,Wed:true,Thu:false,Fri:true},fte:'Part'},
-  MK: {name:'MK',campus:'Senior',cross:false,role:'Teaching',dept:'Business',subjects:['Business Studies'],ygs:['A7','A8'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Full'},
-  DPB:{name:'DPB',campus:'Cross',cross:true,role:'Teaching',dept:'Languages',subjects:['Portuguese','Portuguese II'],ygs:['A5','A6','A7','A8'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:false},fte:'Part'},
-  JS: {name:'JS',campus:'Cross',cross:true,role:'Teaching',dept:'ICT',subjects:['ICT','Computer Science','Media Studies'],ygs:['A5','A6','A7','A8'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Full'},
-  MB: {name:'MB',campus:'Cross',cross:true,role:'Teaching',dept:'DT',subjects:['DT','Art'],ygs:['A5','A6','A7','A8'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Full'},
-  DV: {name:'DV',campus:'Cross',cross:true,role:'Teaching',dept:'PE',subjects:['PE'],ygs:['A5','A6','A7','A8'],days:{Mon:true,Tue:true,Wed:true,Thu:true,Fri:true},fte:'Full'},
-};
-
-const CAMPUS_PERIODS={Primary:PRI_PERIODS,Secondary:SEC_PERIODS,Senior:SEN_PERIODS};
-const CAMPUS_YGS={Primary:PRIMARY_YGS,Secondary:SECONDARY_YGS,Senior:SENIOR_YGS};
-const CAMPUS_COLORS={Primary:'#27ae60',Secondary:'#2E75B6',Senior:'#E8841A',Cross:'#8e44ad'};
-const PHASE_BG={Primary:'#E8F8F0',Secondary:'#EBF5FB',Senior:'#FFF3E0'};
-const DS={Monday:'Mon',Tuesday:'Tue',Wednesday:'Wed',Thursday:'Thu',Friday:'Fri'};
-let ABSENT=[],TUTORS={},currentCampus='Primary',currentDay='Monday',chatHistory=[],savedKey='';
-const SCHOOL_CTX='You are the SAIS Timetable Copilot for Santo Antonio International School of Estoril, 2026/27. Three campuses: Primary (Nursery-A1), Secondary (A2-A6), Senior (A7-A8). Cross-campus staff (JS,MB,DV,DPB,IR,MF) whole-day only. Max loads: Senior 21/30, Secondary+Upper Primary 28/40, Lower Primary 24/35. Key gaps: Art-Primary, Music iGCSE, NW overloaded, LM absent Sep-Oct. Help with cover, timetabling, workload, tutor allocation.';
-
-function showTab(name, el){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.getElementById('panel-'+name).classList.add('active');if(el)el.classList.add('active');if(name==='cover')populateAbsent();if(name==='workload')renderWorkload();if(name==='tutors')renderTutors();if(name==='timetables')initTT();}
-function initTT(){currentCampus=document.getElementById('tt-campus').value;renderTT();}
-function selectDay(day,el){currentDay=day;document.querySelectorAll('.day-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderTT();}
-function renderTT(){
-  const campus=currentCampus,day=currentDay,ygs=CAMPUS_YGS[campus],periods=CAMPUS_PERIODS[campus],tt=((TT_DATA[campus]||{})[day])||{},bgCol=PHASE_BG[campus],hdrCol=CAMPUS_COLORS[campus],lw=campus==='Senior'?118:campus==='Secondary'?88:98;
-  let cg='<colgroup><col style="width:26px"><col style="width:46px"><col style="width:5px">';
-  ygs.forEach(()=>{cg+=`<col style="width:${lw}px"><col style="width:26px">`;});cg+='</colgroup>';
-  const cl=campus==='Primary'?'PRIMARY CAMPUS III':campus==='Secondary'?'SECONDARY CAMPUS':'SENIOR CAMPUS';
-  let th=`<thead><tr class="row-section"><td colspan="${2+1+ygs.length*2}" style="background:${hdrCol};color:white;text-align:center;font-size:13pt;letter-spacing:2px">${cl} — ${day.toUpperCase()}</td></tr><tr class="row-class"><td class="c-per"></td><td class="c-time"></td><td class="c-gap"></td>`;
-  ygs.forEach(yg=>{th+=`<td colspan="2" style="background:${hdrCol};color:white;font-size:11pt">${yg}</td>`;});
-  th+='</tr></thead>';
-  let tb='<tbody>';
-  periods.forEach(([pk,pt,pty])=>{
-    if(pty==='break'){
-      tb+=`<tr class="row-break"><td class="c-per">BRK</td><td class="c-time">${pt}</td><td class="c-gap"></td>`;
-      ygs.forEach(()=>{tb+=`<td colspan="2" style="background:#FFF8DC">— BREAK —</td>`;});
-      tb+='</tr>';
-    } else if(pty==='form'){
-      tb+=`<tr class="row-form"><td class="c-per">FRM</td><td class="c-time">${pt}</td><td class="c-gap"></td>`;
-      ygs.forEach(()=>{tb+=`<td colspan="2" style="background:#EBF5FB;color:#2E75B6;font-size:9pt">Form Time</td>`;});
-      tb+='</tr>';
-    } else if(pty==='lunch'){
-      tb+=`<tr class="row-lunch"><td class="c-per">LCH</td><td class="c-time">${pt}</td><td class="c-gap"></td>`;
-      ygs.forEach(yg=>{
-        let lnch=false;
-        if(campus==='Primary'){if(pk==='LCH'&&yg!=='A1')lnch=true;if(pk==='LCA'&&yg==='A1')lnch=true;}
-        else if(campus==='Secondary'){if(pk==='LK3'&&['A2','A3','A4'].includes(yg))lnch=true;if(pk==='LIG'&&['A5α','A5β','A6α','A6β'].includes(yg))lnch=true;}
-        else if(pk==='LCH')lnch=true;
-        if(lnch){tb+=`<td colspan="2" style="background:#FFE4B5;font-weight:bold">LUNCH</td>`;}
-        else{const c=((tt[pk]||{})[yg])||{};if(c.s){tb+=`<td style="background:${bgCol};font-size:8pt;font-weight:bold">${c.s}<br><span style="font-size:7pt;color:#555">${c.t||''}</span></td><td style="font-size:7pt;color:#666">${c.r||''}</td>`;}else{tb+=`<td style="background:#f5f5f5"></td><td></td>`;}}
+    function defaultTimetableData(){
+      const out = {};
+      YEAR_CONFIG.secondary.groups.forEach(yg => {
+        out[yg] = {};
+        DAYS.forEach(day => {
+          out[yg][day] = {};
+          PERIODS.forEach(p => out[yg][day][p] = {subject:'', teacher:'', room:'', notes:'', block:''});
+        });
       });
-      tb+='</tr>';
-    } else if(pty==='ext'){
-      tb+=`<tr class="row-break"><td class="c-per">EXT</td><td class="c-time">${pt}</td><td class="c-gap"></td>`;
-      ygs.forEach(yg=>{const c=((tt[pk]||{})[yg])||{};if(c.s){tb+=`<td style="background:#E8F8F0;font-size:8pt">${c.s}</td><td style="font-size:7pt">${c.r||''}</td>`;}else{tb+=`<td style="color:#ccc;font-size:8pt">opt.</td><td></td>`;}});
-      tb+='</tr>';
-    } else {
-      tb+=`<tr class="row-period"><td class="c-per" style="font-weight:bold">${pk}</td><td class="c-time">${pt}</td><td class="c-gap"></td>`;
-      ygs.forEach(yg=>{
-        const c=((tt[pk]||{})[yg])||{};
-        if(c.s){tb+=`<td style="background:${bgCol};font-size:8.5pt;font-weight:bold;line-height:1.3">${c.s}<br><span style="font-size:7pt;font-weight:normal;color:#444">${c.t||''}</span></td><td style="font-size:7pt;color:#555">${c.r||''}</td>`;}
-        else{tb+=`<td style="background:#fafafa"></td><td></td>`;}
-      });
-      tb+='</tr>';
+      // Seed a few starter entries to make the build feel live
+      out.A2.Mon[1] = {subject:'English', teacher:'QV', room:'', notes:'Starter seeded from A2 constraints', block:'Core'};
+      out.A2.Mon[2] = {subject:'Maths', teacher:'CF', room:'', notes:'Core', block:'Core'};
+      out.A3.Mon[1] = {subject:'English', teacher:'NS', room:'', notes:'Core', block:'Core'};
+      out.A4.Mon[1] = {subject:'English', teacher:'NS', room:'', notes:'Core', block:'Core'};
+      out.A5.Mon[1] = {subject:'French', teacher:'AB', room:'', notes:'Option Block 1 starter', block:'Opt 1'};
+      out.A5.Mon[2] = {subject:'Business Studies', teacher:'CV', room:'', notes:'Option Block 2 starter', block:'Opt 2'};
+      out.A6.Mon[2] = {subject:'Global Perspectives', teacher:'NW', room:'', notes:'Option Block 2 starter', block:'Opt 2'};
+      return out;
     }
-  });
-  tb+='</tbody>';
-  document.getElementById('tt-table-wrap').innerHTML=`<table class="pv-tt">${cg}${th}${tb}</table>`;
-}
-function printTT(){
-  const campus=currentCampus,day=currentDay;
-  const lbl={Primary:'Primary Campus III (Nursery – A1)',Secondary:'Secondary Campus (A2 – A6)',Senior:'Senior Campus (A7 – A8)'};
-  document.getElementById('pv-campus-label').textContent=lbl[campus];
-  document.getElementById('pv-day-label').textContent=day.toUpperCase();
-  document.getElementById('pv-meta-label').textContent='2026/27 · Draft — subject to confirmation';
-  document.getElementById('pv-footer-date').textContent='Printed: '+new Date().toLocaleString('en-GB');
-  document.getElementById('pv-table-container').innerHTML=document.getElementById('tt-table-wrap').innerHTML;
-  window.print();
-  setTimeout(()=>{document.getElementById('pv-table-container').innerHTML='';},2000);
-}
-function populateAbsent(){
-  const sel=document.getElementById('sel-absent'),campus=document.getElementById('sel-campus').value,day=DS[document.getElementById('sel-day').value];
-  sel.innerHTML='<option value="">- select -</option>';
-  Object.entries(STAFF).forEach(([code,s])=>{
-    if(s.role!=='Teaching'||!s.days[day])return;
-    if(campus!=='all'&&s.campus!==campus&&s.campus!=='Cross')return;
-    if(ABSENT.includes(code))return;
-    const o=document.createElement('option');o.value=code;o.textContent=code+' - '+s.dept+' ('+s.campus+')';sel.appendChild(o);
-  });
-}
-function addAbsent(){const sel=document.getElementById('sel-absent');if(!sel.value||ABSENT.includes(sel.value))return;ABSENT.push(sel.value);renderAbsentTags();refreshCover();populateAbsent();}
-function removeAbsent(code){ABSENT=ABSENT.filter(c=>c!==code);renderAbsentTags();refreshCover();populateAbsent();}
-function clearAbsent(){ABSENT=[];renderAbsentTags();refreshCover();populateAbsent();}
-function renderAbsentTags(){
-  const div=document.getElementById('absent-tags');
-  if(!ABSENT.length){div.innerHTML='<span style="color:#bbb;font-size:11px">None</span>';document.getElementById('print-cover-btn').style.display='none';return;}
-  div.innerHTML=ABSENT.map(c=>{const col=CAMPUS_COLORS[STAFF[c]?.campus]||'#999';return `<span class="atag" style="background:${col}">${c} <span class="x" onclick="removeAbsent('${c}')">x</span></span>`;}).join('');
-  document.getElementById('print-cover-btn').style.display='block';
-}
-function refreshCover(){
-  const grid=document.getElementById('cover-grid');
-  if(!ABSENT.length){grid.innerHTML='<div class="no-r">Add absent teachers to generate cover</div>';document.getElementById('cover-stats').style.display='none';return;}
-  const day=document.getElementById('sel-day').value,ds=DS[day],cf=document.getElementById('sel-campus').value;
-  document.getElementById('cover-stats').style.display='flex';
-  document.getElementById('cover-stats').innerHTML=`<div class="stat"><div class="stat-n">${ABSENT.length}</div><div class="stat-l">Absent</div></div><div class="stat"><div class="stat-n">${day}</div><div class="stat-l">Day</div></div>`;
-  let html='';
-  ABSENT.forEach(abCode=>{
-    const ab=STAFF[abCode];if(!ab||!ab.days[ds])return;
-    const campus=ab.campus==='Cross'?'Secondary':ab.campus;if(cf!=='all'&&campus!==cf)return;
-    const cc=campus.toLowerCase().slice(0,3),note=ab.absent?' - Absent until '+ab.absent:'';
-    const tt=((TT_DATA[campus]||{})[day])||{};
-    const lessons=[];
-    (CAMPUS_PERIODS[campus]||[]).filter(([,,t])=>t==='lesson').forEach(([pk,pt])=>{
-      (CAMPUS_YGS[campus]||[]).forEach(yg=>{const c=((tt[pk]||{})[yg])||{};if(c.t===abCode)lessons.push({period:pk,time:pt,subject:c.s,yg,room:c.r||''});});
-    });
-    const fc=lesson=>Object.entries(STAFF).filter(([code,ts])=>code!==abCode&&!ABSENT.includes(code)&&ts.role==='Teaching'&&ts.days[ds]&&(ts.campus===campus||ts.campus==='Cross'||ts.cross)).map(([code,ts])=>({code,match:ts.subjects.some(s=>lesson.subject.toLowerCase().includes(s.toLowerCase()))})).sort((a,b)=>b.match-a.match).slice(0,6);
-    html+=`<div class="pblock"><div class="phdr phdr-${cc}"><span>${abCode} - ${ab.dept}<span class="pill pill-${cc}" style="margin-left:8px">${campus}</span>${note}</span><span style="font-size:11px;opacity:.8">${lessons.length} lesson${lessons.length!==1?'s':''}</span></div><div style="padding:8px">`;
-    if(!lessons.length)html+=`<p style="color:#888;font-style:italic;font-size:12px;padding:8px">No timetabled lessons for ${day}. Timetable pending.</p>`;
-    else lessons.forEach(l=>{
-      const cvrs=fc(l);
-      html+=`<div class="citem ${cc}"><div><strong>${l.period}</strong><br><span style="font-size:10px;color:#888">${l.time}</span></div><div><strong>${l.subject||'TBC'}</strong><br><span style="font-size:10px;color:#666">${l.yg}</span></div><div><span style="background:#eee;border-radius:4px;padding:2px 6px;font-size:11px">${l.room||'TBC'}</span></div><div>${cvrs.slice(0,4).map(t=>`<span style="display:inline-block;margin:1px;background:${t.match?'#27ae60':'#2E75B6'};color:white;border-radius:4px;padding:2px 7px;font-size:11px">${t.code}</span>`).join('')||'<span style="color:#c0392b">No cover</span>'}</div><select style="font-size:11px;border-radius:4px;padding:4px;border:1px solid #ddd;width:100%"><option>Assign...</option>${cvrs.map(t=>`<option>${t.code}</option>`).join('')}</select></div>`;
-    });
-    html+='</div></div>';
-  });
-  grid.innerHTML=html||'<div class="no-r">No lessons to cover for this selection</div>';
-}
-function printCoverSheet(){window.print();}
-function getMax(s){if(s.campus==='Senior')return 21;if(s.campus==='Primary')return(s.stage==='Lower'||s.stage==='EY')?24:28;return 28;}
-function renderWorkload(){
-  const filter=document.getElementById('wl-campus').value;let rows='';
-  Object.entries(STAFF).forEach(([code,s])=>{
-    if(s.role==='Admin')return;
-    if(filter!=='all'){if(filter==='Cross'&&!s.cross)return;if(filter!=='Cross'&&s.campus!==filter&&!s.cross)return;}
-    const di=Object.entries(s.days).filter(([,v])=>v).map(([k])=>k[0]).join(''),max=getMax(s),cc=s.campus.toLowerCase().slice(0,3);
-    const flags=[s.absent?`<span style="background:#fde8e8;color:#c0392b;border-radius:4px;padding:1px 5px;font-size:10px">Absent ${s.absent}</span>`:'',s.cross?`<span style="background:#f0e8ff;color:#8e44ad;border-radius:4px;padding:1px 5px;font-size:10px">Cross-campus</span>`:'',s.note?`<span style="background:#fff3cd;color:#856404;border-radius:4px;padding:1px 5px;font-size:10px">${s.note}</span>`:''].filter(Boolean).join(' ');
-    rows+=`<tr><td><strong>${code}</strong> ${flags}</td><td><span class="pill pill-${cc}">${s.campus}</span></td><td>${s.dept}</td><td style="font-size:11px">${(s.subjects||[]).slice(0,3).join(', ')||'TBC'}</td><td style="font-size:11px">${(s.ygs||[]).join(', ')||'TBC'}</td><td>${di} <small>(${Object.values(s.days).filter(Boolean).length}d)</small></td><td><span style="font-size:11px;color:#888">Max ${max}</span><div class="load-bar"><div class="load-fill" style="width:0%"></div></div></td></tr>`;
-  });
-  document.getElementById('workload-container').innerHTML=`<div style="background:white;border-radius:10px;padding:14px;overflow-x:auto;box-shadow:0 2px 8px rgba(0,0,0,.07)"><table class="data-table"><thead><tr><th>Code</th><th>Campus</th><th>Dept</th><th>Subjects</th><th>Year Groups</th><th>Days</th><th>Load</th></tr></thead><tbody>${rows}</tbody></table></div>`;
-}
-const ALL_YGS=[{code:'Nursery',label:'Nursery',campus:'Primary'},{code:'Reception',label:'Reception',campus:'Primary'},{code:'P1',label:'P1 Yr1',campus:'Primary'},{code:'P2',label:'P2 Yr2',campus:'Primary'},{code:'P3',label:'P3 Yr3',campus:'Primary'},{code:'P4',label:'P4 Yr4',campus:'Primary'},{code:'P5',label:'P5 Yr5',campus:'Primary'},{code:'A1',label:'A1 Yr6',campus:'Primary'},{code:'A2',label:'A2 Yr7',campus:'Secondary'},{code:'A3',label:'A3 Yr8',campus:'Secondary'},{code:'A4',label:'A4 Yr9',campus:'Secondary'},{code:'A5',label:'A5 Yr10',campus:'Secondary'},{code:'A6',label:'A6 Yr11',campus:'Secondary'},{code:'A7',label:'A7 Yr12',campus:'Senior'},{code:'A8',label:'A8 Yr13',campus:'Senior'}];
-ALL_YGS.forEach(yg=>{TUTORS[yg.code]='';});
-function renderTutors(){
-  document.getElementById('tutor-grid').innerHTML=ALL_YGS.map(yg=>{
-    const cc=yg.campus.toLowerCase().slice(0,3);
-    const elig=Object.entries(STAFF).filter(([,s])=>s.role==='Teaching'&&(s.campus===yg.campus||s.cross)).map(([c])=>c);
-    return `<div class="tutor-card ${cc}"><div style="font-weight:700;font-size:13px;color:#1F4E79;margin-bottom:4px">${yg.label}</div><div style="font-size:10px;color:#888;margin-bottom:6px">${yg.campus}</div><select style="width:100%;border:1.5px solid #ddd;border-radius:6px;padding:6px;font-size:12px" onchange="TUTORS['${yg.code}']=this.value"><option value="">-- unassigned --</option>${elig.map(c=>`<option value="${c}" ${TUTORS[yg.code]===c?'selected':''}>${c}</option>`).join('')}</select>${TUTORS[yg.code]?`<div style="margin-top:4px;font-size:11px;color:#27ae60;font-weight:700">? ${TUTORS[yg.code]}</div>`:''}</div>`;
-  }).join('');
-}
 
-async function loadTutors(){
-  try{
-    const r=await fetch('/api/tutors');
-    if(!r.ok) throw new Error('Could not load tutor assignments');
-    const d=await r.json();
-    if(d && d.tutors){
-      Object.keys(TUTORS).forEach(k=>{ TUTORS[k]=d.tutors[k]||''; });
+    function defaultTutors(){
+      return {
+        Nursery:{tutor1:'', tutor2:''},
+        Reception:{tutor1:'', tutor2:''},
+        P1:{tutor1:'', tutor2:''},
+        P2:{tutor1:'', tutor2:''},
+        P3:{tutor1:'', tutor2:''},
+        P4:{tutor1:'', tutor2:''},
+        P5:{tutor1:'', tutor2:''},
+        A1:{tutor1:'', tutor2:''},
+        A2:{tutor1:'', tutor2:''},
+        A3:{tutor1:'', tutor2:''},
+        A4:{tutor1:'', tutor2:''},
+        A5:{tutor1:'', tutor2:''},
+        A6:{tutor1:'', tutor2:''},
+        A7:{tutor1:'', tutor2:''},
+        A8:{tutor1:'', tutor2:''}
+      };
     }
-  }catch(e){
-    console.warn('Tutor load failed:', e.message);
-  }finally{
-    renderTutors();
-  }
-}
-async function saveTutors(){
-  try{
-    const r=await fetch('/api/tutors',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({tutors:TUTORS})
+
+    let appState = {
+      timetables: loadLS('sais-build-timetables', defaultTimetableData()),
+      tutors: loadLS('sais-build-tutors', defaultTutors())
+    };
+
+    let currentEdit = null;
+
+    function loadLS(key, fallback){
+      try{
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+      }catch(e){
+        return fallback;
+      }
+    }
+
+    function saveAll(){
+      localStorage.setItem('sais-build-timetables', JSON.stringify(appState.timetables));
+      localStorage.setItem('sais-build-tutors', JSON.stringify(appState.tutors));
+      alert('Current build state saved in this browser.');
+    }
+
+    function saveTutors(){
+      saveAll();
+      alert('Tutor assignments saved.');
+    }
+
+    function resetDemo(){
+      if(!confirm('Reset this build to the starter state?')) return;
+      appState.timetables = defaultTimetableData();
+      appState.tutors = defaultTutors();
+      saveAll();
+      renderAll();
+    }
+
+    function showTab(name, el){
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+      document.getElementById('panel-' + name).classList.add('active');
+      if(el) el.classList.add('active');
+    }
+
+    function changeSection(){
+      const section = document.getElementById('section-select').value;
+      const yearSel = document.getElementById('year-select');
+      yearSel.innerHTML = '';
+      YEAR_CONFIG[section].groups.forEach(g => {
+        const opt = document.createElement('option');
+        opt.value = g;
+        opt.textContent = g;
+        yearSel.appendChild(opt);
+      });
+      renderTimetable();
+    }
+
+    function renderTimetable(){
+      const section = document.getElementById('section-select').value;
+      const yg = document.getElementById('year-select').value;
+      const wrap = document.getElementById('tt-wrap');
+      const sum = document.getElementById('subjects-summary');
+
+      if(section === 'primary'){
+        wrap.innerHTML = `
+          <div class="notice">
+            Primary uses its own structure, separate from the A2–A8 model. This build keeps the primary side as a protected placeholder while the secondary backbone is being shaped.
+          </div>`;
+        sum.innerHTML = `<div>Primary structure is intentionally kept separate at this stage.</div>`;
+        return;
+      }
+
+      const data = appState.timetables[yg];
+      let html = '<table class="tt"><thead><tr><th style="width:68px">P</th>';
+      DAYS.forEach(d => html += `<th>${d}</th>`);
+      html += '</tr></thead><tbody>';
+
+      PERIODS.forEach(p => {
+        html += `<tr><th>${p}</th>`;
+        DAYS.forEach(day => {
+          const slot = data?.[day]?.[p] || {};
+          const empty = !slot.subject;
+          html += `
+            <td>
+              <div class="slot ${empty ? 'empty' : ''}" onclick="openEditor('${yg}','${day}',${p})">
+                <div class="subject">${slot.subject || 'Empty slot'}</div>
+                <div class="meta">
+                  ${slot.teacher ? `Teacher: ${slot.teacher}<br>` : ''}
+                  ${slot.room ? `Room: ${slot.room}<br>` : ''}
+                  ${slot.block ? `Group: ${slot.block}<br>` : ''}
+                  ${slot.notes ? slot.notes : ''}
+                </div>
+              </div>
+            </td>`;
+        });
+        html += '</tr>';
+      });
+
+      html += '</tbody></table>';
+      wrap.innerHTML = html;
+
+      const subjects = SUBJECTS[yg] || [];
+      sum.innerHTML = subjects.map(s => `<div class="badge">${s}</div>`).join('');
+    }
+
+    function renderOptions(){
+      const wrap = document.getElementById('options-view');
+      const blocks = [
+        ...OPTIONS_MODEL.ks3,
+        ...OPTIONS_MODEL.igcse,
+        ...OPTIONS_MODEL.alevel
+      ];
+      wrap.innerHTML = blocks.map(block => `
+        <div class="block">
+          <div class="badge ${block.tag === 'Compulsory' ? 'primary' : block.tag === 'Pending' ? 'warn' : 'success'}">${block.tag}</div>
+          <h4>${block.title}</h4>
+          <ul>${block.items.map(i => `<li>${i}</li>`).join('')}</ul>
+        </div>
+      `).join('');
+    }
+
+    function renderTutors(){
+      const wrap = document.getElementById('tutor-wrap');
+      const rows = [];
+
+      [...YEAR_CONFIG.primary.groups, ...YEAR_CONFIG.secondary.groups, 'A7', 'A8'].forEach(group => {
+        const primaryLike = YEAR_CONFIG.primary.groups.includes(group);
+        const row = appState.tutors[group] || {tutor1:'', tutor2:''};
+        rows.push(`
+          <tr>
+            <td><strong>${group}</strong></td>
+            <td>${teacherSelect(`tutor1-${group}`, row.tutor1)}</td>
+            <td>${primaryLike ? '<span class="subtle">Single tutor only</span>' : teacherSelect(`tutor2-${group}`, row.tutor2)}</td>
+          </tr>
+        `);
+      });
+
+      wrap.innerHTML = `
+        <table class="tutor-table">
+          <thead>
+            <tr>
+              <th>Group</th>
+              <th>Tutor 1</th>
+              <th>Tutor 2</th>
+            </tr>
+          </thead>
+          <tbody>${rows.join('')}</tbody>
+        </table>
+      `;
+    }
+
+    function teacherSelect(id, value){
+      return `
+        <select id="${id}" class="select" style="width:100%">
+          <option value="">—</option>
+          ${STAFF.map(t => `<option value="${t}" ${t===value ? 'selected' : ''}>${t}</option>`).join('')}
+        </select>
+      `;
+    }
+
+    function openEditor(year, day, period){
+      currentEdit = {year, day, period};
+      const slot = appState.timetables?.[year]?.[day]?.[period] || {subject:'', teacher:'', room:'', notes:'', block:''};
+
+      document.getElementById('editor-context').textContent = `${year} • ${day} • Period ${period}`;
+
+      const subjSel = document.getElementById('edit-subject');
+      subjSel.innerHTML = '<option value="">Empty</option>' + (SUBJECTS[year] || []).map(s => `<option value="${s}">${s}</option>`).join('');
+      subjSel.value = slot.subject || '';
+
+      populateTeacherOptions(slot.subject, slot.teacher);
+
+      document.getElementById('edit-room').value = slot.room || '';
+      document.getElementById('edit-notes').value = slot.notes || '';
+      document.getElementById('edit-block').value = slot.block || '';
+
+      subjSel.onchange = function(){
+        populateTeacherOptions(this.value, '');
+      };
+
+      document.getElementById('editor-backdrop').classList.add('show');
+    }
+
+    function populateTeacherOptions(subject, chosen){
+      const teacherSel = document.getElementById('edit-teacher');
+      const options = subject ? (TEACHER_BY_SUBJECT[subject] || STAFF) : STAFF;
+      teacherSel.innerHTML = '<option value="">—</option>' + options.map(t => `<option value="${t}">${t}</option>`).join('');
+      teacherSel.value = chosen || '';
+    }
+
+    function closeEditor(){
+      document.getElementById('editor-backdrop').classList.remove('show');
+      currentEdit = null;
+    }
+
+    function saveCurrentCell(){
+      if(!currentEdit) return;
+      const {year, day, period} = currentEdit;
+      if(!appState.timetables[year]) appState.timetables[year] = {};
+      if(!appState.timetables[year][day]) appState.timetables[year][day] = {};
+      appState.timetables[year][day][period] = {
+        subject: document.getElementById('edit-subject').value,
+        teacher: document.getElementById('edit-teacher').value,
+        room: document.getElementById('edit-room').value.trim(),
+        notes: document.getElementById('edit-notes').value.trim(),
+        block: document.getElementById('edit-block').value.trim()
+      };
+      saveAll();
+      closeEditor();
+      renderTimetable();
+    }
+
+    function clearCurrentCell(){
+      if(!currentEdit) return;
+      const {year, day, period} = currentEdit;
+      appState.timetables[year][day][period] = {subject:'', teacher:'', room:'', notes:'', block:''};
+      saveAll();
+      closeEditor();
+      renderTimetable();
+    }
+
+    function collectTutorState(){
+      const out = JSON.parse(JSON.stringify(appState.tutors));
+      [...YEAR_CONFIG.primary.groups, ...YEAR_CONFIG.secondary.groups, 'A7', 'A8'].forEach(group => {
+        const t1 = document.getElementById(`tutor1-${group}`)?.value || '';
+        const t2 = document.getElementById(`tutor2-${group}`)?.value || '';
+        out[group] = {tutor1: t1, tutor2: YEAR_CONFIG.primary.groups.includes(group) ? '' : t2};
+      });
+      appState.tutors = out;
+    }
+
+    document.addEventListener('change', (e)=>{
+      if(e.target && e.target.id && e.target.id.startsWith('tutor')){
+        collectTutorState();
+      }
     });
-    const d=await r.json();
-    if(!r.ok) throw new Error(d.error||'Could not save tutor assignments');
-    renderTutors();
-    alert('Tutor assignments saved.');
-  }catch(e){
-    alert('Save failed: '+e.message);
-  }
-}
-async function resetTutors(){
-  ALL_YGS.forEach(yg=>{TUTORS[yg.code]='';});
-  renderTutors();
-  await saveTutors();
-}
-async function sendMsg(){
-  const input=document.getElementById('chat-input'),msg=input.value.trim();if(!msg)return;
-  input.value='';
-  addMsg(msg,'user');
-  chatHistory.push({role:'user',content:msg});
-  const t=document.createElement('div');
-  t.className='msg msg-ai thinking';
-  t.textContent='Thinking...';
-  document.getElementById('chat-history').appendChild(t);
-  scrollChat();
-  try{
-    const r=await fetch('/api/chat',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({messages:chatHistory,tutors:TUTORS})
-    });
-    const d=await r.json();
-    if(!r.ok) throw new Error(d.error||'Chat request failed');
-    t.remove();
-    const reply=d.reply||'No response.';
-    if(d.updatedTutors){
-      Object.keys(TUTORS).forEach(k=>{ TUTORS[k]=d.updatedTutors[k]||''; });
+
+    function renderAll(){
+      changeSection();
+      renderOptions();
       renderTutors();
     }
-    addMsg(reply,'ai');
-    chatHistory.push({role:'assistant',content:reply});
-  }catch(e){
-    t.remove();
-    addMsg('Error: '+e.message+'. Check your Vercel environment variables and Supabase setup.','ai');
-  }
-}
-function addMsg(text,type){const div=document.createElement('div');div.className='msg msg-'+type;div.innerHTML=String(text).replace(/\n/g,'<br>');document.getElementById('chat-history').appendChild(div);scrollChat();}
-function scrollChat(){const h=document.getElementById('chat-history');h.scrollTop=h.scrollHeight;}
-function clearChat(){chatHistory=[];document.getElementById('chat-history').innerHTML='<div class="msg msg-ai"><strong>SAIS Copilot ready.</strong><br><br>Try asking:<br>• "Assign RL as tutor for A2"<br>• "Who is tutor for A5?"<br>• "What is NW\'s teaching load this year?"</div>';}
-document.addEventListener('DOMContentLoaded',async ()=>{
-  populateAbsent();
-  renderWorkload();
-  initTT();
-  document.getElementById('tt-campus').addEventListener('change',initTT);
-  await loadTutors();
-});
-</script></body></html>
+
+    renderAll();
+  </script>
+</body>
+</html>
