@@ -20,10 +20,10 @@ header p{font-size:11px;opacity:.85}
 .panel{display:none;padding:16px}.panel.active{display:block}
 .controls{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;background:white;padding:14px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:14px}
 .cg{display:flex;flex-direction:column;gap:4px}
-.cg label{font-size:10px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.5px}
+.cg label{font-size:13px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.5px}
 select,input[type=text],input[type=password]{border:1.5px solid #ddd;border-radius:6px;padding:7px 10px;font-size:13px;background:white}
 select:focus,input:focus{outline:none;border-color:#2E75B6}
-.btn{padding:7px 14px;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;transition:all .15s}
+.btn{padding:7px 14px;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:700;transition:all .15s}
 .btn-blue{background:#2E75B6;color:white}.btn-blue:hover{background:#1F4E79}
 .btn-red{background:#c0392b;color:white}.btn-red:hover{background:#a93226}
 .btn-green{background:#27ae60;color:white}.btn-green:hover{background:#1e8449}
@@ -50,7 +50,7 @@ select:focus,input:focus{outline:none;border-color:#2E75B6}
 .citem.sen{border-left-color:#E8841A;background:#fff8f0}
 /* Day tabs */
 .day-tabs{display:flex;gap:4px;margin-bottom:0;flex-wrap:wrap}
-.day-tab{padding:7px 16px;border-radius:8px 8px 0 0;cursor:pointer;font-size:12px;font-weight:700;border:2px solid #ddd;border-bottom:none;background:#eee;color:#555}
+.day-tab{padding:7px 16px;border-radius:8px 8px 0 0;cursor:pointer;font-size:14px;font-weight:700;border:2px solid #ddd;border-bottom:none;background:#eee;color:#555}
 .day-tab.active{background:#1F4E79;color:white;border-color:#1F4E79}
 .day-tab:hover:not(.active){background:#d0dbe8;border-color:#2E75B6;color:#1F4E79}
 /* Warnings panel */
@@ -63,16 +63,16 @@ select:focus,input:focus{outline:none;border-color:#2E75B6}
 #ttWarningsList li{margin-bottom:4px}
 /* Timetable table on-screen */
 .tt-wrap{overflow-x:auto;background:white;border-radius:0 10px 10px 10px;padding:10px;box-shadow:0 2px 8px rgba(0,0,0,.07)}
-.tt-screen{width:100%;border-collapse:collapse;font-size:11px;font-family:'Book Antiqua',Palatino,Georgia,serif}
+.tt-screen{width:100%;border-collapse:collapse;font-size:14px;font-family:'Book Antiqua',Palatino,Georgia,serif}
 .tt-screen td,.tt-screen th{border:0.5px solid #ccc;padding:3px 4px;vertical-align:middle;text-align:center}
 .tt-screen .cell-lesson{cursor:pointer;transition:background .1s}
 .tt-screen .cell-lesson:hover{background:#e8f4ff!important;outline:2px solid #2E75B6}
-.tt-screen .cell-per{width:24px;font-size:9px;color:#888;background:#f8f8f8}
-.tt-screen .cell-time{width:44px;font-size:8px;color:#888;background:#f8f8f8;line-height:1.2}
+.tt-screen .cell-per{width:32px;font-size:14px;font-weight:700;color:#555;background:#f8f8f8}
+.tt-screen .cell-time{width:58px;font-size:11px;color:#666;background:#f8f8f8;line-height:1.3}
 .tt-screen .cell-gap{width:4px;border:none!important;background:white!important;padding:0}
 .tt-screen .row-section-hdr td{background:#1F4E79;color:white;font-size:11px;font-weight:700;letter-spacing:1px;height:22px;text-align:center}
-.tt-screen .row-class-hdr td{font-size:10px;font-weight:700;height:28px;text-align:center}
-.tt-screen .row-break-r td{background:#FFF8DC;font-size:10px;font-weight:700;letter-spacing:2px;height:24px}
+.tt-screen .row-class-hdr td{font-size:13px;font-weight:700;height:28px;text-align:center}
+.tt-screen .row-break-r td{background:#FFF8DC;font-size:13px;font-weight:700;letter-spacing:2px;height:24px}
 .tt-screen .row-lunch-r td{background:#FFE4B5;font-size:9px;font-weight:700;height:22px}
 .tt-screen .row-form-r td{background:#EBF5FB;color:#2E75B6;font-size:9px;height:20px}
 /* ═══════════════════════════════════════
@@ -90,7 +90,7 @@ select:focus,input:focus{outline:none;border-color:#2E75B6}
 .pv-day{font-size:20pt;font-weight:bold;letter-spacing:3px;text-transform:uppercase;line-height:1.1}
 .pv-campus{font-size:12pt;font-weight:bold;color:#444}
 .pv-meta{font-size:7pt;color:#555;margin-top:2px}
-.pv-logo{height:50px;width:auto;margin-left:10px}
+.pv-logo{height:54px;width:auto;margin-left:10px}
 .pv-tt{width:100%;border-collapse:collapse;table-layout:fixed;font-family:'Book Antiqua',Palatino,Georgia,serif}
 .pv-tt td,.pv-tt th{border:0.75px solid #888;text-align:center;vertical-align:middle;padding:1px 2px;word-wrap:break-word;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .c-per{width:22px;font-size:8pt}.c-time{width:38px;font-size:7pt;line-height:1.2}
@@ -119,7 +119,7 @@ select:focus,input:focus{outline:none;border-color:#2E75B6}
 .data-table tr:hover td{background:#f5f9ff}
 .load-bar{height:7px;border-radius:4px;background:#e0e0e0;overflow:hidden;margin-top:3px}
 .load-fill{height:100%;border-radius:4px}
-.pill{display:inline-block;border-radius:12px;padding:2px 9px;font-size:10px;font-weight:700;color:white}
+.pill{display:inline-block;border-radius:12px;padding:2px 9px;font-size:13px;font-weight:700;color:white}
 .pill-pri{background:#27ae60}.pill-sec{background:#2E75B6}.pill-sen{background:#E8841A}.pill-cro{background:#8e44ad}
 /* Options */
 .opt-table{width:100%;border-collapse:collapse;font-size:11px}
@@ -138,18 +138,18 @@ select:focus,input:focus{outline:none;border-color:#2E75B6}
 #cell-modal-inner{background:white;padding:20px;border-radius:10px;width:320px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
 #cell-modal-inner h3{font-size:14px;font-weight:700;color:#1F4E79;margin-bottom:14px;border-bottom:2px solid #2E75B6;padding-bottom:6px}
 .modal-field{margin-bottom:10px}
-.modal-field label{display:block;font-size:10px;font-weight:700;color:#666;text-transform:uppercase;margin-bottom:3px}
+.modal-field label{display:block;font-size:13px;font-weight:700;color:#666;text-transform:uppercase;margin-bottom:3px}
 .modal-field input{width:100%;border:1.5px solid #ddd;border-radius:6px;padding:7px 10px;font-size:13px}
 .modal-field input:focus{outline:none;border-color:#2E75B6}
 .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
 @media(max-width:800px){.citem{grid-template-columns:1fr 1fr}}
 
 /* ═══ A3 PRINT — larger fonts ═══ */
-.cell-per{font-size:11px!important;font-weight:700!important}
-.cell-time{font-size:10px!important}
-.cell-lesson{font-size:10px!important;font-weight:700!important;height:52px!important}
-.row-form-r td,.row-break-r td,.row-lunch-r td{font-size:11px!important}
-th,td{font-size:10px}
+.cell-per{font-size:13px!important;font-weight:700!important}
+.cell-time{font-size:12px!important}
+.cell-lesson{font-size:13px!important;font-weight:700!important;height:56px!important;line-height:1.35!important}
+.row-form-r td,.row-break-r td,.row-lunch-r td{font-size:13px!important;font-weight:700!important}
+.tt-screen th,.tt-screen td{font-size:13px!important}
 </style>
 </head>
 <body>
@@ -1043,10 +1043,10 @@ function renderCell(c){
   if(sPipe){
     const ss=sRaw.split('|').map(s=>s.trim());
     const ts=(tPipe?tRaw.split('|'):tRaw.split('/')).map(t=>t.trim());
-    const items=ss.map((s,i)=>`<span style="display:inline-block;text-align:center;vertical-align:middle;padding:0 2px"><span style="font-size:7px;font-weight:700;display:block;line-height:1.3">${s}</span><span style="font-size:5.5px;color:#777;display:block">${ts[i]||ts[0]||''}</span></span>`).join('<span style="color:#999;font-size:10px;vertical-align:middle;padding:0 2px;font-weight:300">|</span>');
+    const items=ss.map((s,i)=>`<span style="display:inline-block;text-align:center;vertical-align:middle;padding:0 2px"><span style="font-size:14px;font-weight:700;display:block;line-height:1.4">${s}</span><span style="font-size:11px;color:#777;display:block">${ts[i]||ts[0]||''}</span></span>`).join('<span style="color:#999;font-size:14px;vertical-align:middle;padding:0 3px;font-weight:300">|</span>');
     return `<div style="text-align:center;line-height:1.2">${items}</div>`;
   }
-  return `<span style="font-size:8px;font-weight:700">${sRaw}</span><br><span style="font-size:7px;font-weight:400;color:#555">${tRaw}</span>`;
+  return `<span style="font-size:13px;font-weight:700">${sRaw}</span><br><span style="font-size:11px;font-weight:400;color:#555">${tRaw}</span>`;
 }
 
 function buildCoverCheckboxes(campus,day,slot){
@@ -1101,7 +1101,7 @@ function renderTT(){
   let th=`<thead>
   <tr class="row-section-hdr"><td colspan="${2+1+ygs.length*2}">${cl} &mdash; ${day.toUpperCase()}</td></tr>
   <tr class="row-class-hdr"><td class="cell-per"></td><td class="cell-time"></td><td class="cell-gap"></td>`;
-  ygs.forEach(yg=>{th+=`<td colspan="2" style="background:${hdrCol};color:white;font-size:10px;font-weight:700">${yg}</td>`;});
+  ygs.forEach(yg=>{th+=`<td colspan="2" style="background:${hdrCol};color:white;font-size:13px;font-weight:700">${yg}</td>`;});
   th+='</tr></thead>';
 
   let tb='<tbody>';
@@ -1110,8 +1110,8 @@ function renderTT(){
       const brkPicker=(campus==='Secondary'||campus==='Senior')?buildCoverCheckboxes(campus,day,'break'):'';
       const brkArr=getCoverAssigned(campus,day,'break');
       const brkBadge=brkArr.length?` <b style="color:#1a56b0;font-size:11px">${brkArr.join(' | ')}</b>`:'';
-      tb+=`<tr class="row-break-r"><td class="cell-per" style="font-size:10px;font-weight:700">BRK</td><td class="cell-time" style="font-size:10px">${pt}</td><td class="cell-gap"></td>`;
-      tb+=`<td colspan="${ygs.length*2}" style="font-size:11px;text-align:center;font-weight:600">&mdash; BREAK &mdash;${brkBadge} ${brkPicker}</td>`;
+      tb+=`<tr class="row-break-r"><td class="cell-per" style="font-size:13px;font-weight:700">BRK</td><td class="cell-time" style="font-size:12px">${pt}</td><td class="cell-gap"></td>`;
+      tb+=`<td colspan="${ygs.length*2}" style="font-size:13px;text-align:center;font-weight:600">&mdash; BREAK &mdash;${brkBadge} ${brkPicker}</td>`;
       tb+='</tr>';
     } else if(pty==='form'){
       tb+=`<tr class="row-form-r"><td class="cell-per">FRM</td><td class="cell-time">${pt}</td><td class="cell-gap"></td>`;
@@ -1122,22 +1122,22 @@ function renderTT(){
       const slchArr=getCoverAssigned(campus,day,'lunch');
       const slchBadge=slchArr.length?` <b style="color:#1a56b0;font-size:11px">${slchArr.join(' | ')}</b>`:'';
       const slchPicker=(campus==='Secondary'||campus==='Senior')?buildCoverCheckboxes(campus,day,'lunch'):'';
-      tb+=`<tr class="row-lunch-r"><td class="cell-per" style="font-size:10px;font-weight:700">LCH</td><td class="cell-time" style="font-size:10px">${pt}</td><td class="cell-gap"></td>`;
-      tb+=`<td colspan="${ygs.length*2}" style="font-size:11px;text-align:center;font-weight:600">&mdash; LUNCH &mdash;${slchBadge} ${slchPicker}</td>`;
+      tb+=`<tr class="row-lunch-r"><td class="cell-per" style="font-size:13px;font-weight:700">LCH</td><td class="cell-time" style="font-size:12px">${pt}</td><td class="cell-gap"></td>`;
+      tb+=`<td colspan="${ygs.length*2}" style="font-size:13px;text-align:center;font-weight:600">&mdash; LUNCH &mdash;${slchBadge} ${slchPicker}</td>`;
       tb+='</tr>';
     } else if(pty==='stagger1'){
       // 12:05-12:50 — LUNCH for A2/A3/A4, lesson for A5/A6
       const lchArr=getCoverAssigned(campus,day,'lunch');
       const lchBadge=lchArr.length?` <b style="color:#1a56b0;font-size:11px">${lchArr.join(' | ')}</b>`:'';
       const lchPicker=buildCoverCheckboxes(campus,day,'lunch');
-      tb+=`<tr class="row-lunch-r"><td class="cell-per" style="font-size:10px;font-weight:700">LCH<br><span style="color:#888;font-size:9px">A2–4</span></td><td class="cell-time" style="font-size:10px">${pt}</td><td class="cell-gap"></td>`;
+      tb+=`<tr class="row-lunch-r"><td class="cell-per" style="font-size:13px;font-weight:700">LCH<br><span style="color:#888;font-size:12px">A2–4</span></td><td class="cell-time" style="font-size:12px">${pt}</td><td class="cell-gap"></td>`;
       ygs.forEach(yg=>{
         if(['A2','A3','A4'].includes(yg)){
-          tb+=`<td colspan="2" style="font-size:11px;text-align:center;font-weight:600">&mdash; LUNCH &mdash;${lchBadge} ${lchPicker}</td>`;
+          tb+=`<td colspan="2" style="font-size:13px;text-align:center;font-weight:600">&mdash; LUNCH &mdash;${lchBadge} ${lchPicker}</td>`;
         } else {
           const c=((tt['P5i']||{})[yg])||{};
           if(c.s&&c.s!=='LUNCH'&&c.s!=='BREAK'){
-            tb+=`<td class="cell-lesson" style="background:${bgCol};font-size:8px;font-weight:700;height:46px;padding:2px" data-pos="${campus}|${day}|P5i|${yg}">${renderCell(c)}</td><td style="font-size:7px;color:#555;vertical-align:top;padding-top:3px">${formatRoomCell(c.r)}</td>`;
+            tb+=`<td class="cell-lesson" style="background:${bgCol};font-size:13px;font-weight:700;height:54px;padding:3px" data-pos="${campus}|${day}|P5i|${yg}">${renderCell(c)}</td><td style="font-size:11px;color:#555;vertical-align:top;padding-top:3px">${formatRoomCell(c.r)}</td>`;
           } else {tb+=`<td style="background:#f5f5f5"></td><td></td>`;}
         }
       });
@@ -1147,14 +1147,14 @@ function renderTT(){
       const lch2Arr=getCoverAssigned(campus,day,'lunch2');
       const lch2Badge=lch2Arr.length?` <b style="color:#1a56b0;font-size:11px">${lch2Arr.join(' | ')}</b>`:'';
       const lch2Picker=buildCoverCheckboxes(campus,day,'lunch2');
-      tb+=`<tr class="row-lunch-r"><td class="cell-per" style="font-size:10px;font-weight:700">LCH<br><span style="color:#888;font-size:9px">A5–6</span></td><td class="cell-time" style="font-size:10px">${pt}</td><td class="cell-gap"></td>`;
+      tb+=`<tr class="row-lunch-r"><td class="cell-per" style="font-size:13px;font-weight:700">LCH<br><span style="color:#888;font-size:12px">A5–6</span></td><td class="cell-time" style="font-size:12px">${pt}</td><td class="cell-gap"></td>`;
       ygs.forEach(yg=>{
         if(['A5','A6'].includes(yg)){
-          tb+=`<td colspan="2" style="font-size:11px;text-align:center;font-weight:600">&mdash; LUNCH &mdash;${lch2Badge} ${lch2Picker}</td>`;
+          tb+=`<td colspan="2" style="font-size:13px;text-align:center;font-weight:600">&mdash; LUNCH &mdash;${lch2Badge} ${lch2Picker}</td>`;
         } else {
           const c=((tt['P5k']||{})[yg])||{};
           if(c.s&&c.s!=='LUNCH'&&c.s!=='BREAK'){
-            tb+=`<td class="cell-lesson" style="background:${bgCol};font-size:8px;font-weight:700;height:46px;padding:2px" data-pos="${campus}|${day}|P5k|${yg}">${renderCell(c)}</td><td style="font-size:7px;color:#555;vertical-align:top;padding-top:3px">${formatRoomCell(c.r)}</td>`;
+            tb+=`<td class="cell-lesson" style="background:${bgCol};font-size:13px;font-weight:700;height:54px;padding:3px" data-pos="${campus}|${day}|P5k|${yg}">${renderCell(c)}</td><td style="font-size:11px;color:#555;vertical-align:top;padding-top:3px">${formatRoomCell(c.r)}</td>`;
           } else {tb+=`<td style="background:#f5f5f5"></td><td></td>`;}
         }
       });
@@ -1163,8 +1163,8 @@ function renderTT(){
       tb+=`<tr class="row-break-r"><td class="cell-per">EXT</td><td class="cell-time">${pt}</td><td class="cell-gap"></td>`;
       ygs.forEach(yg=>{
         const c=((tt[pk]||{})[yg])||{};
-        if(c.s){tb+=`<td class="cell-lesson" style="background:#E8F8F0;font-size:8px" data-pos="${campus}|${day}|${pk}|${yg}">${c.s}<br><span style="font-size:7px;color:#555">${c.t||''}</span></td><td style="font-size:7px;vertical-align:top">${formatRoomCell(c.r)}</td>`;}
-        else{tb+=`<td style="color:#ccc;font-size:8px">opt.</td><td></td>`;}
+        if(c.s){tb+=`<td class="cell-lesson" style="background:#E8F8F0;font-size:13px;font-weight:700" data-pos="${campus}|${day}|${pk}|${yg}">${c.s}<br><span style="font-size:11px;color:#555">${c.t||''}</span></td><td style="font-size:11px;vertical-align:top">${formatRoomCell(c.r)}</td>`;}
+        else{tb+=`<td style="color:#ccc;font-size:12px">opt.</td><td></td>`;}
       });
       tb+='</tr>';
     } else {
@@ -1179,18 +1179,18 @@ function renderTT(){
             // Option block (Senior): History | Maths | Media | Psychology — WL|PK|EH|SVA
             cellBg='#FFF7ED';
             const ss=sRaw.split('|'),ts=tRaw.split('|');
-            cellInner=ss.map((s,i)=>`<span style="display:inline-flex;flex-direction:column;align-items:center;margin:0 1px;vertical-align:middle"><b style="font-size:6px;color:#7A4000;white-space:nowrap">${s.trim()}</b><span style="font-size:5.5px;color:#b07040">${(ts[i]||'').trim()}</span></span>`).join('<span style="color:#c97;font-weight:700;font-size:9px;vertical-align:middle;padding:0 2px">|</span>');
+            cellInner=ss.map((s,i)=>`<span style="display:inline-flex;flex-direction:column;align-items:center;margin:0 1px;vertical-align:middle"><b style="font-size:11px;color:#7A4000;white-space:nowrap">${s.trim()}</b><span style="font-size:10px;color:#b07040">${(ts[i]||'').trim()}</span></span>`).join('<span style="color:#c97;font-weight:700;font-size:9px;vertical-align:middle;padding:0 2px">|</span>');
           } else if(sPipe){
             // α/β split: Spanish|ICT, DT|Art, Maths|Science, Science|Maths etc.
             cellBg='#F0F8FF';
             const ss=sRaw.split('|'),ts=tSlash?tRaw.split('/'):['',''];
-            cellInner=`<div style="display:flex;align-items:stretch;gap:1px;width:100%;min-height:38px"><div style="flex:1;background:#E8F4FD;border-radius:2px;padding:1px 2px;text-align:center;display:flex;flex-direction:column;justify-content:center"><span style="font-size:6px;font-weight:800;color:#1a56b0">α</span><span style="font-size:7px;font-weight:700;color:#111;line-height:1.2">${ss[0].trim()}</span><span style="font-size:5.5px;color:#555">${(ts[0]||'').trim()}</span></div><span style="color:#bbb;font-size:11px;align-self:center;line-height:1;padding:0 1px">|</span><div style="flex:1;background:#FFF3E0;border-radius:2px;padding:1px 2px;text-align:center;display:flex;flex-direction:column;justify-content:center"><span style="font-size:6px;font-weight:800;color:#b06000">β</span><span style="font-size:7px;font-weight:700;color:#111;line-height:1.2">${ss[1]?ss[1].trim():''}</span><span style="font-size:5.5px;color:#555">${(ts[1]||'').trim()}</span></div></div>`;
+            cellInner=`<div style="display:flex;align-items:stretch;gap:1px;width:100%;min-height:38px"><div style="flex:1;background:#E8F4FD;border-radius:2px;padding:1px 2px;text-align:center;display:flex;flex-direction:column;justify-content:center"><span style="font-size:11px;font-weight:800;color:#1a56b0">α</span><span style="font-size:12px;font-weight:700;color:#111;line-height:1.2">${ss[0].trim()}</span><span style="font-size:10px;color:#555">${(ts[0]||'').trim()}</span></div><span style="color:#bbb;font-size:11px;align-self:center;line-height:1;padding:0 1px">|</span><div style="flex:1;background:#FFF3E0;border-radius:2px;padding:1px 2px;text-align:center;display:flex;flex-direction:column;justify-content:center"><span style="font-size:11px;font-weight:800;color:#b06000">β</span><span style="font-size:12px;font-weight:700;color:#111;line-height:1.2">${ss[1]?ss[1].trim():''}</span><span style="font-size:10px;color:#555">${(ts[1]||'').trim()}</span></div></div>`;
           } else {
             // Regular cell — show α:X | β:Y for split-teacher subjects (NS/QV English)
-            const tchrD=(!sPipe&&tSlash&&!tPipe)?`<span style="font-size:6px;color:#1a56b0;font-weight:700">α:${tRaw.split('/')[0].trim()}</span><span style="color:#ccc;margin:0 2px">|</span><span style="font-size:6px;color:#b06000;font-weight:700">β:${tRaw.split('/')[1].trim()}</span>`:`<span style="font-size:7px;font-weight:400;color:#555">${tRaw}</span>`;
-            cellInner=`<span style="font-size:8px;font-weight:700">${sRaw}</span><br>${tchrD}`;
+            const tchrD=(!sPipe&&tSlash&&!tPipe)?`<span style="font-size:11px;color:#1a56b0;font-weight:700">α:${tRaw.split('/')[0].trim()}</span><span style="color:#ccc;margin:0 2px">|</span><span style="font-size:11px;color:#b06000;font-weight:700">β:${tRaw.split('/')[1].trim()}</span>`:`<span style="font-size:11px;font-weight:400;color:#555">${tRaw}</span>`;
+            cellInner=`<span style="font-size:13px;font-weight:700">${sRaw}</span><br>${tchrD}`;
           }
-          tb+=`<td class="cell-lesson" style="background:${cellBg};font-size:8px;font-weight:700;height:46px;padding:2px" data-pos="${campus}|${day}|${pk}|${yg}">${cellInner}</td><td style="font-size:7px;color:#555;vertical-align:top;padding-top:3px">${formatRoomCell(c.r)}</td>`;
+          tb+=`<td class="cell-lesson" style="background:${cellBg};font-size:13px;font-weight:700;height:54px;padding:3px" data-pos="${campus}|${day}|${pk}|${yg}">${cellInner}</td><td style="font-size:11px;color:#555;vertical-align:top;padding-top:3px">${formatRoomCell(c.r)}</td>`;
         } else {tb+=`<td style="background:#fafafa;height:46px" data-pos="${campus}|${day}|${pk}|${yg}" class="cell-lesson cell-empty"></td><td></td>`;}
       });
       tb+='</tr>';
@@ -1262,8 +1262,8 @@ function formatRoomCell(r){
   // Display room column: split on | and stack vertically
   if(!r)return'';
   const rooms=r.split('|');
-  if(rooms.length===1)return`<span style="font-size:7px;font-weight:700;color:#444">${r}</span>`;
-  return rooms.map((rm,i)=>`<span style="display:block;font-size:6.5px;font-weight:700;color:#444;line-height:1.5">${rm}${i<rooms.length-1?'<span style="color:#bbb"> |</span>':''}</span>`).join('');
+  if(rooms.length===1)return`<span style="font-size:11px;font-weight:700;color:#444">${r}</span>`;
+  return rooms.map((rm,i)=>`<span style="display:block;font-size:11px;font-weight:700;color:#444;line-height:1.5">${rm}${i<rooms.length-1?'<span style="color:#bbb"> |</span>':''}</span>`).join('');
 }
 
 function closeCellModal(){
