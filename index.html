@@ -391,7 +391,7 @@ const TT_DATA = {
   Senior:    {"Monday":{"FRM":{"A7":{"s":"Form Time","t":"","r":""},"A8":{"s":"Form Time","t":"","r":""}},"BRK":{"A7":{"s":"BREAK","t":"","r":""},"A8":{"s":"BREAK","t":"","r":""}},"LCH":{"A7":{"s":"LUNCH","t":"","r":""},"A8":{"s":"LUNCH","t":"","r":""}},"L1":{"A7":{"s":"English AS | French | Mandarin | Spanish","t":"ES | AB | ML | TS","r":""}},"L2":{"A7":{"s":"Study / Reading","t":"","r":""},"A8":{"s":"Study / Reading","t":"","r":""}},"L3":{"A7":{"s":"Chemistry | Computer Science | IT | Portuguese II AS","t":"MD | JS | JS | DPB","r":""},"A8":{"s":"Chemistry | Computer Science | IT | Portuguese II AS","t":"MD | JS | JS | DPB","r":""}},"L4":{"A7":{"s":"Art | Marine Science | PE Option | Travel & Tourism","t":"MB | PM | DV | WL","r":""},"A8":{"s":"Art | Marine Science | PE Option | Travel & Tourism","t":"MB | PM | DV | WL","r":""}},"L5":{"A7":{"s":"Art | Marine Science | PE Option | Travel & Tourism","t":"MB | PM | DV | WL","r":""},"A8":{"s":"Art | Marine Science | PE Option | Travel & Tourism","t":"MB | PM | DV | WL","r":""}},"L6":{"A7":{"s":"Env. Management (α:WL / β:PM)","t":"WL/PM","r":""},"A8":{"s":"Env. Management (α:WL / β:PM)","t":"WL/PM","r":""}}},"Friday":{"FRM":{"A7":{"s":"Form Time","t":"","r":""},"A8":{"s":"Form Time","t":"","r":""}},"BRK":{"A7":{"s":"BREAK","t":"","r":""},"A8":{"s":"BREAK","t":"","r":""}},"LCH":{"A7":{"s":"LUNCH","t":"","r":""},"A8":{"s":"LUNCH","t":"","r":""}},"L1":{"A7":{"s":"Art | Marine Science | PE Option | Travel & Tourism","t":"MB | PM | DV | WL","r":""},"A8":{"s":"Art | Marine Science | PE Option | Travel & Tourism","t":"MB | PM | DV | WL","r":""}},"L2":{"A7":{"s":"Study / Reading","t":"","r":""},"A8":{"s":"Study / Reading","t":"","r":""}},"L3":{"A7":{"s":"History | Maths | Media Studies | Psychology","t":"WL | PK | EH | SVA","r":""},"A8":{"s":"History | Maths | Media Studies | Psychology","t":"WL | PK | EH | SVA","r":""}},"L4":{"A7":{"s":"Study / Reading","t":"","r":""},"A8":{"s":"Study / Reading","t":"","r":""}},"L5":{"A7":{"s":"Study / Reading","t":"","r":""},"A8":{"s":"Study / Reading","t":"","r":""}},"L6":{"A7":{"s":"Study / Reading","t":"","r":""},"A8":{"s":"Study / Reading","t":"","r":""}}}}
 };
 const PRI_PERIODS = [["P1", "08:30\u201309:15", "lesson"], ["P2", "09:15\u201310:00", "lesson"], ["BRK", "10:00\u201310:35", "break"], ["P3", "10:35\u201311:20", "lesson"], ["LCH", "11:20\u201312:05", "lunch"], ["P4", "11:20\u201312:05", "lesson"], ["P5", "12:05\u201312:50", "lesson"], ["LCA", "12:05\u201312:50", "lunch"], ["P6", "12:50\u201313:25", "lesson"], ["P7", "13:25\u201314:20", "lesson"], ["P8", "14:20\u201315:05", "lesson"], ["EXT", "15:05\u201315:50", "ext"]];
-const SEC_PERIODS = [["FRM", "08:15\u201308:30", "form"], ["P1", "08:30\u201309:15", "lesson"], ["P2", "09:15\u201310:00", "lesson"], ["BRK", "10:00\u201310:35", "break"], ["P3", "10:35\u201311:20", "lesson"], ["P4", "11:20\u201312:05", "lesson"], ["LK3", "12:05\u201312:50", "lunch"], ["P5i", "12:05\u201312:50", "lesson"], ["P5k", "12:50\u201313:35", "lesson"], ["LIG", "12:50\u201313:35", "lunch"], ["P6", "13:35\u201314:20", "lesson"], ["P7", "14:20\u201315:05", "lesson"], ["P8", "15:05\u201315:50", "lesson"]];
+const SEC_PERIODS = [["FRM", "08:15\u201308:30", "form"], ["P1", "08:30\u201309:15", "lesson"], ["P2", "09:15\u201310:00", "lesson"], ["BRK", "10:00\u201310:35", "break"], ["P3", "10:35\u201311:20", "lesson"], ["P4", "11:20\u201312:05", "lesson"], ["SLCH1", "12:05\u201312:50", "stagger1"], ["SLCH2", "12:50\u201313:35", "stagger2"], ["P6", "13:35\u201314:20", "lesson"], ["P7", "14:20\u201315:05", "lesson"], ["P8", "15:05\u201315:50", "lesson"]];
 const SEN_PERIODS = [["FRM", "08:15\u201308:30", "form"], ["L1", "08:30\u201309:30", "lesson"], ["L2", "09:30\u201310:30", "lesson"], ["BRK", "10:30\u201310:50", "break"], ["L3", "10:50\u201311:50", "lesson"], ["L4", "11:50\u201312:50", "lesson"], ["LCH", "12:50\u201313:50", "lunch"], ["L5", "13:50\u201314:50", "lesson"], ["L6", "14:50\u201315:50", "lesson"]];
 const PRIMARY_YGS   = ["KG", "P1", "P2", "P3", "P4", "P5", "A1"];
 const SECONDARY_YGS = ["A2","A3","A4","A5","A6"];
@@ -893,7 +893,7 @@ const CAMPUS_STAFF = {
 
 // Adjacent periods for eligibility
 const COVER_ADJACENT = {
-  Secondary: { break:['P2','P3'], lunch:['P4','P5k'], lunch2:['P5k','P6'] },
+  Secondary: { break:['P2','P3'], lunch:['P4','P6'], lunch2:['P5k','P6'] },
   Senior:    { break:['L2','L3'], lunch:['L4','L5'] },
 };
 
@@ -1020,6 +1020,39 @@ function renderCoverSummary(campus){
   </div>`;
 }
 
+
+function renderCell(c){
+  const sRaw=c.s||'',tRaw=c.t||'';
+  const sPipe=sRaw.includes('|'),tPipe=tRaw.includes('|');
+  if(sPipe){
+    const ss=sRaw.split('|').map(s=>s.trim());
+    const ts=(tPipe?tRaw.split('|'):tRaw.split('/')).map(t=>t.trim());
+    const items=ss.map((s,i)=>`<span style="display:inline-block;text-align:center;vertical-align:middle;padding:0 2px"><span style="font-size:7px;font-weight:700;display:block;line-height:1.3">${s}</span><span style="font-size:5.5px;color:#777;display:block">${ts[i]||ts[0]||''}</span></span>`).join('<span style="color:#999;font-size:10px;vertical-align:middle;padding:0 2px;font-weight:300">|</span>');
+    return `<div style="text-align:center;line-height:1.2">${items}</div>`;
+  }
+  return `<span style="font-size:8px;font-weight:700">${sRaw}</span><br><span style="font-size:7px;font-weight:400;color:#555">${tRaw}</span>`;
+}
+
+function buildCoverOptions(campus,day,slot,assigned){
+  const el=getCoverEligible(campus,day,slot);
+  const usage=getCoverUsage(campus);
+  let opts=`<option value="">— assign —</option>`;
+  const addGrp=(label,items)=>{
+    if(!items.length) return;
+    opts+=`<optgroup label="${label}">`;
+    for(const {code,name,alreadyDone} of items){
+      const sel=code===assigned?'selected':'';
+      opts+=`<option value="${code}" ${sel} style="${alreadyDone?'color:#aaa':''}">${name}</option>`;
+    }
+    opts+=`</optgroup>`;
+  };
+  addGrp('Free — ideal',el.tier1);
+  addGrp('One lesson adjacent',el.tier2);
+  addGrp('Back-to-back',el.tier3);
+  addGrp('Admin — last resort',el.admin);
+  return opts;
+}
+
 function renderTT(){
   const campus=currentCampus, day=currentDay;
   const ygs=CAMPUS_YGS[campus], periods=CAMPUS_PERIODS[campus];
@@ -1041,45 +1074,56 @@ function renderTT(){
   let tb='<tbody>';
   periods.forEach(([pk,pt,pty])=>{
     if(pty==='break'){
-      const brkCellId=`cvr_${campus}_${day}_break`.replace(/\s/g,'_');
-      const brkSel=(campus==='Secondary'||campus==='Senior')?buildCoverSelect(campus,day,'break',brkCellId):'';
       const brkAssigned=getCoverAssigned(campus,day,'break');
-      const brkBadge=brkAssigned?`<span style="font-size:8px;font-weight:700;color:#1a56b0">${brkAssigned}</span>`:'';
-      tb+=`<tr class="row-break-r"><td class="cell-per">BRK</td><td class="cell-time" style="font-size:8px">${pt}${brkSel?`<div style="margin-top:2px">${brkSel}</div>`:''}</td><td class="cell-gap"></td>`;
-      ygs.forEach(()=>{tb+=`<td colspan="2" style="font-size:9px">&mdash; BREAK &mdash; ${brkBadge}</td>`;});
+      const brkLabel=brkAssigned?`<b style="color:#1a56b0;font-size:9px"> ${brkAssigned}</b>`:'';
+      const brkSel=(campus==='Secondary'||campus==='Senior')?`<select onchange="setCoverAssigned('${campus}','${day}','break',this.value)" style="font-size:8px;padding:1px 2px;border:1px solid #9db;border-radius:3px;margin-top:2px;max-width:100px;background:#f0faf4;cursor:pointer">${buildCoverOptions(campus,day,'break',brkAssigned)}</select>`:'';
+      tb+=`<tr class="row-break-r"><td class="cell-per">BRK</td><td class="cell-time">${pt}</td><td class="cell-gap"></td>`;
+      tb+=`<td colspan="${ygs.length*2}" style="font-size:9px;text-align:center">&mdash; BREAK &mdash;${brkLabel}${brkSel?`<br>${brkSel}`:''}</td>`;
       tb+='</tr>';
     } else if(pty==='form'){
       tb+=`<tr class="row-form-r"><td class="cell-per">FRM</td><td class="cell-time">${pt}</td><td class="cell-gap"></td>`;
       ygs.forEach(()=>{tb+=`<td colspan="2">Form Time</td>`;});
       tb+='</tr>';
     } else if(pty==='lunch'){
-      const lslot=(pk==='LIG')?'lunch2':'lunch';
-      const lchCellId=`cvr_${campus}_${day}_${lslot}`.replace(/\s/g,'_');
-      const lchSel=(campus==='Secondary'||campus==='Senior')?buildCoverSelect(campus,day,lslot,lchCellId):'';
-      const lchAssigned=getCoverAssigned(campus,day,lslot);
-      const lchBadge=lchAssigned?`<span style="font-size:8px;font-weight:700;color:#1a56b0">${lchAssigned}</span>`:'';
-      tb+=`<tr class="row-lunch-r"><td class="cell-per">LCH</td><td class="cell-time" style="font-size:8px">${pt}${lchSel?`<div style="margin-top:2px">${lchSel}</div>`:''}</td><td class="cell-gap"></td>`;
+      // Senior non-staggered lunch
+      const lchA=getCoverAssigned(campus,day,'lunch');
+      const lchLabel=lchA?`<b style="color:#1a56b0;font-size:9px"> ${lchA}</b>`:'';
+      const lchSel=`<select onchange="setCoverAssigned('${campus}','${day}','lunch',this.value)" style="font-size:8px;padding:1px 2px;border:1px solid #e6b86a;border-radius:3px;margin-top:2px;max-width:100px;background:#fffbf0;cursor:pointer">${buildCoverOptions(campus,day,'lunch',lchA)}</select>`;
+      tb+=`<tr class="row-lunch-r"><td class="cell-per">LCH</td><td class="cell-time">${pt}</td><td class="cell-gap"></td>`;
+      ygs.forEach((_,i)=>{
+        if(i===0){tb+=`<td colspan="${ygs.length*2}" style="font-size:9px;text-align:center">&mdash; LUNCH &mdash;${lchLabel}<div>${lchSel}</div></td>`;}
+      });
+      tb+='</tr>';
+    } else if(pty==='stagger1'){
+      // 12:05-12:50 — LUNCH for A2/A3/A4, lesson for A5/A6
+      const lchA=getCoverAssigned(campus,day,'lunch');
+      const lchLabel=lchA?`<b style="color:#1a56b0;font-size:9px"> ${lchA}</b>`:'';
+      const lchSel=`<select onchange="setCoverAssigned('${campus}','${day}','lunch',this.value)" style="font-size:8px;padding:1px 2px;border:1px solid #e6b86a;border-radius:3px;margin-top:2px;max-width:100px;background:#fffbf0;cursor:pointer">${buildCoverOptions(campus,day,'lunch',lchA)}</select>`;
+      tb+=`<tr class="row-lunch-r"><td class="cell-per" style="font-size:7px">LCH<br><span style="color:#888;font-size:6px">A2–4</span></td><td class="cell-time">${pt}</td><td class="cell-gap"></td>`;
       ygs.forEach(yg=>{
-        let lnch=false;
-        if(campus==='Primary'){if(pk==='LCH'&&yg!=='A1')lnch=true;if(pk==='LCA'&&yg==='A1')lnch=true;}
-        else if(campus==='Secondary'){if(pk==='LK3'&&['A2','A3','A4'].includes(yg))lnch=true;if(pk==='LIG'&&['A5\u03b1','A5\u03b2','A6\u03b1','A6\u03b2'].includes(yg))lnch=true;}
-        else if(pk==='LCH')lnch=true;
-        if(lnch){tb+=`<td colspan="2">&mdash; LUNCH &mdash;</td>`;}
-        else{
-          const c=((tt[pk]||{})[yg])||{};
+        if(['A2','A3','A4'].includes(yg)){
+          tb+=`<td colspan="2" style="font-size:9px;text-align:center">&mdash; LUNCH &mdash;${lchLabel}<div>${lchSel}</div></td>`;
+        } else {
+          const c=((tt['P5i']||{})[yg])||{};
           if(c.s&&c.s!=='LUNCH'&&c.s!=='BREAK'){
-            const sRaw=c.s||'',tRaw=c.t||'';
-          const sPipe=sRaw.includes('|'),tPipe=tRaw.includes('|');
-          let cellInner='',cellBg=bgCol;
-          if(sPipe){
-            const ss=sRaw.split('|').map(s=>s.trim());
-            const ts=(tPipe?tRaw.split('|'):tRaw.split('/')).map(t=>t.trim());
-            const items=ss.map((s,i)=>`<span style="display:inline-block;text-align:center;vertical-align:middle;padding:0 2px"><span style="font-size:7px;font-weight:700;display:block;line-height:1.3">${s}</span><span style="font-size:5.5px;color:#777;display:block">${ts[i]||ts[0]||''}</span></span>`).join('<span style="color:#999;font-size:10px;vertical-align:middle;padding:0 2px;font-weight:300">|</span>');
-            cellInner=`<div style="text-align:center;line-height:1.2">${items}</div>`;
-          }else{
-            cellInner=`<span style="font-size:8px;font-weight:700">${sRaw}</span><br><span style="font-size:7px;font-weight:400;color:#555">${tRaw}</span>`;
-          }
-          tb+=`<td class="cell-lesson" style="background:${cellBg};font-size:8px;font-weight:700;height:46px;padding:2px" data-pos="${campus}|${day}|${pk}|${yg}">${cellInner}</td><td style="font-size:7px;color:#555;vertical-align:top;padding-top:3px">${formatRoomCell(c.r)}</td>`;
+            tb+=`<td class="cell-lesson" style="background:${bgCol};font-size:8px;font-weight:700;height:46px;padding:2px" data-pos="${campus}|${day}|P5i|${yg}">${renderCell(c)}</td><td style="font-size:7px;color:#555;vertical-align:top;padding-top:3px">${formatRoomCell(c.r)}</td>`;
+          } else {tb+=`<td style="background:#f5f5f5"></td><td></td>`;}
+        }
+      });
+      tb+='</tr>';
+    } else if(pty==='stagger2'){
+      // 12:50-13:35 — lesson for A2/A3/A4, LUNCH for A5/A6
+      const lch2A=getCoverAssigned(campus,day,'lunch2');
+      const lch2Label=lch2A?`<b style="color:#1a56b0;font-size:9px"> ${lch2A}</b>`:'';
+      const lch2Sel=`<select onchange="setCoverAssigned('${campus}','${day}','lunch2',this.value)" style="font-size:8px;padding:1px 2px;border:1px solid #e6b86a;border-radius:3px;margin-top:2px;max-width:100px;background:#fffbf0;cursor:pointer">${buildCoverOptions(campus,day,'lunch2',lch2A)}</select>`;
+      tb+=`<tr class="row-lunch-r"><td class="cell-per" style="font-size:7px">LCH<br><span style="color:#888;font-size:6px">A5–6</span></td><td class="cell-time">${pt}</td><td class="cell-gap"></td>`;
+      ygs.forEach(yg=>{
+        if(['A5','A6'].includes(yg)){
+          tb+=`<td colspan="2" style="font-size:9px;text-align:center">&mdash; LUNCH &mdash;${lch2Label}<div>${lch2Sel}</div></td>`;
+        } else {
+          const c=((tt['P5k']||{})[yg])||{};
+          if(c.s&&c.s!=='LUNCH'&&c.s!=='BREAK'){
+            tb+=`<td class="cell-lesson" style="background:${bgCol};font-size:8px;font-weight:700;height:46px;padding:2px" data-pos="${campus}|${day}|P5k|${yg}">${renderCell(c)}</td><td style="font-size:7px;color:#555;vertical-align:top;padding-top:3px">${formatRoomCell(c.r)}</td>`;
           } else {tb+=`<td style="background:#f5f5f5"></td><td></td>`;}
         }
       });
