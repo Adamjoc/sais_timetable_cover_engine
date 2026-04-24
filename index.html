@@ -915,11 +915,25 @@ function renderTT(){
       ygs.forEach(yg=>{
         const c=((tt[pk]||{})[yg])||{};
         if(c.s&&c.s!=='LUNCH'&&c.s!=='BREAK'){
-          const isPiped=c.s&&c.s.includes('|');
-          const cellBg=isPiped?'#FFF7ED':bgCol;
-          const subjHtml=isPiped?c.s.split('|').map((sj,si)=>`<span style="display:block;font-size:6.5px;font-weight:700;line-height:1.5;color:#7A4000;border-bottom:${si<c.s.split('|').length-1?'1px dashed #fcc':'none'};padding-bottom:1px">${sj.trim()}</span>`).join(''):c.s;
-          const tchrHtml=isPiped?c.t.split('|').map(tc=>`<span style="display:block;font-size:6px;color:#888;line-height:1.5">${tc.trim()}</span>`).join(''):c.t||'';
-          tb+=`<td class="cell-lesson" style="background:${cellBg};font-size:8.5px;font-weight:700;line-height:1.3;height:46px" data-pos="${campus}|${day}|${pk}|${yg}">${subjHtml}<br>${tchrHtml}</td><td style="font-size:7px;color:#555;vertical-align:top;padding-top:3px">${formatRoomCell(c.r)}</td>`;
+          const sRaw=c.s||'',tRaw=c.t||'';
+          const sPipe=sRaw.includes('|'),tPipe=tRaw.includes('|'),tSlash=tRaw.includes('/');
+          let cellInner='',cellBg=bgCol;
+          if(sPipe&&tPipe){
+            // Option block (Senior): History | Maths | Media | Psychology — WL|PK|EH|SVA
+            cellBg='#FFF7ED';
+            const ss=sRaw.split('|'),ts=tRaw.split('|');
+            cellInner=ss.map((s,i)=>`<span style="display:inline-flex;flex-direction:column;align-items:center;margin:0 1px;vertical-align:middle"><b style="font-size:6px;color:#7A4000;white-space:nowrap">${s.trim()}</b><span style="font-size:5.5px;color:#b07040">${(ts[i]||'').trim()}</span></span>`).join('<span style="color:#c97;font-weight:700;font-size:9px;vertical-align:middle;padding:0 2px">|</span>');
+          } else if(sPipe){
+            // α/β split: Spanish|ICT, DT|Art, Maths|Science, Science|Maths etc.
+            cellBg='#F0F8FF';
+            const ss=sRaw.split('|'),ts=tSlash?tRaw.split('/'):['',''];
+            cellInner=`<div style="display:flex;align-items:stretch;gap:1px;width:100%;min-height:38px"><div style="flex:1;background:#E8F4FD;border-radius:2px;padding:1px 2px;text-align:center;display:flex;flex-direction:column;justify-content:center"><span style="font-size:6px;font-weight:800;color:#1a56b0">α</span><span style="font-size:7px;font-weight:700;color:#111;line-height:1.2">${ss[0].trim()}</span><span style="font-size:5.5px;color:#555">${(ts[0]||'').trim()}</span></div><span style="color:#bbb;font-size:11px;align-self:center;line-height:1;padding:0 1px">|</span><div style="flex:1;background:#FFF3E0;border-radius:2px;padding:1px 2px;text-align:center;display:flex;flex-direction:column;justify-content:center"><span style="font-size:6px;font-weight:800;color:#b06000">β</span><span style="font-size:7px;font-weight:700;color:#111;line-height:1.2">${ss[1]?ss[1].trim():''}</span><span style="font-size:5.5px;color:#555">${(ts[1]||'').trim()}</span></div></div>`;
+          } else {
+            // Regular cell — show α:X | β:Y for split-teacher subjects (NS/QV English)
+            const tchrD=(!sPipe&&tSlash&&!tPipe)?`<span style="font-size:6px;color:#1a56b0;font-weight:700">α:${tRaw.split('/')[0].trim()}</span><span style="color:#ccc;margin:0 2px">|</span><span style="font-size:6px;color:#b06000;font-weight:700">β:${tRaw.split('/')[1].trim()}</span>`:`<span style="font-size:7px;font-weight:400;color:#555">${tRaw}</span>`;
+            cellInner=`<span style="font-size:8px;font-weight:700">${sRaw}</span><br>${tchrD}`;
+          }
+          tb+=`<td class="cell-lesson" style="background:${cellBg};font-size:8px;font-weight:700;height:46px;padding:2px" data-pos="${campus}|${day}|${pk}|${yg}">${cellInner}</td><td style="font-size:7px;color:#555;vertical-align:top;padding-top:3px">${formatRoomCell(c.r)}</td>`;
         } else {tb+=`<td style="background:#fafafa;height:46px" data-pos="${campus}|${day}|${pk}|${yg}" class="cell-lesson cell-empty"></td><td></td>`;}
       });
       tb+='</tr>';
